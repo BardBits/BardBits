@@ -16,6 +16,20 @@ Parameters:
     Default: BardBits
     Description: Repository allowed to assume the deploy role.
 
+  GitHubOrgId:
+    Type: String
+    Default: "40240344"
+    Description: >
+      Numeric account id, from `gh api users/<login> --jq .id`. GitHub embeds it
+      in the token's sub claim; see the note on the trust policy below.
+
+  RepositoryId:
+    Type: String
+    Default: "1328996786"
+    Description: >
+      Numeric repository id, from `gh api repos/<org>/<repo> --jq .id`. Unlike
+      the name, it survives a rename.
+
   BranchName:
     Type: String
     Default: main
@@ -66,9 +80,20 @@ Resources:
               # GitHub Actions workflow anywhere could assume this role - the
               # classic misconfiguration. StringEquals, not StringLike: no
               # wildcard, so a branch named "main-something" cannot match.
+              #
+              # Note the "@<id>" segments. Most guides show the older shape,
+              # repo:<org>/<repo>:ref:..., but this repository's tokens carry
+              # immutable numeric ids alongside the names. Confirmed from the
+              # sub recorded in CloudTrail on a rejected AssumeRoleWithWebIdentity
+              # rather than assumed: an exact match against the name-only form
+              # never matches and every deploy fails with AccessDenied.
+              #
+              # That is a security improvement, not just a quirk. Names can be
+              # renamed and reclaimed; ids cannot. Whoever later registers the
+              # login "BardBits" gets a different id and cannot assume this role.
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${RepositoryName}:ref:refs/heads/${BranchName}"
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}@${GitHubOrgId}/${RepositoryName}@${RepositoryId}:ref:refs/heads/${BranchName}"
       Policies:
         - PolicyName: deploy-static-site
           PolicyDocument:

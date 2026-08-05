@@ -55,31 +55,52 @@ try {
 
   if (-not (Test-Path $cfg.source)) { throw "Source '$($cfg.source)' not found. Build first, or drop -SkipBuild." }
 
+  # Every filter below uses the --option=value form rather than two arguments.
+  # PowerShell on Linux glob-expands a bare "*" against the working directory
+  # before the AWS CLI ever sees it, so `--exclude "*"` arrived as the repo's
+  # file listing and the CLI rejected it. Windows does not do this, so it only
+  # appeared once deploys moved to a Linux runner. Keeping the wildcard glued to
+  # its option name leaves nothing that looks like a bare glob to expand.
+
   # Vite fingerprints asset filenames (index-BnxbtRNF.js), so a given URL's
-  # contents never change: cache them for a year. Upload these BEFORE the HTML
-  # so a new page is never live while the assets it references are missing.
-  # Sitemaps are excluded wholesale: they keep stable URLs and change often, so
-  # a year-long immutable cache would strand crawlers on a stale copy.
+  # contents never change: cache them for a year. Sitemaps are excluded
+  # wholesale: they keep stable URLs and change often, so a year-long immutable
+  # cache would strand crawlers on a stale copy.
+  #
+  # Deliberately additive - no --delete here. Pruning in this pass would remove
+  # the assets the *currently live* HTML still points at, before the new HTML
+  # replacing it has been uploaded. A failure between the two passes then leaves
+  # the site referencing objects that no longer exist; that is exactly what
+  # happened on the first CI run. Stale assets are pruned after the HTML lands.
   Write-Host "==> Uploading fingerprinted assets..." -ForegroundColor Cyan
-  $assetArgs = @("s3", "sync", $cfg.source, $dest,
-    "--exclude", "*.html", "--exclude", "*.xml", "--exclude", "robots.txt",
-    "--cache-control", "public,max-age=31536000,immutable")
-  if ($prune) { $assetArgs += "--delete" }
-  aws @assetArgs
+  aws s3 sync $cfg.source $dest `
+    "--exclude=*.html" "--exclude=*.xml" "--exclude=robots.txt" `
+    --cache-control "public,max-age=31536000,immutable"
   if ($LASTEXITCODE -ne 0) { throw "Asset sync failed." }
 
   # Every page keeps a stable URL across deploys, so all HTML must revalidate.
   # Note the filter is "*.html", not "index.html" — the latter matches only the
   # prefix root, missing the nested cottage/, cabin/ and beach/ pages and
   # caching them for a year. That same narrowness is what makes it usable as the
-  # ProtectRootIndex exclusion below.
+  # protectRootIndex exclusion below.
   Write-Host "==> Uploading pages..." -ForegroundColor Cyan
-  $htmlArgs = @("s3", "sync", $cfg.source, $dest, "--exclude", "*", "--include", "*.html")
-  if ($cfg.protectRootIndex) { $htmlArgs += @("--exclude", "index.html") }
+  $htmlArgs = @("s3", "sync", $cfg.source, $dest, "--exclude=*", "--include=*.html")
+  if ($cfg.protectRootIndex) { $htmlArgs += "--exclude=index.html" }
   if ($prune) { $htmlArgs += "--delete" }
   $htmlArgs += @("--cache-control", "no-cache", "--content-type", "text/html; charset=utf-8")
   aws @htmlArgs
   if ($LASTEXITCODE -ne 0) { throw "Page upload failed." }
+
+  # Now that the new HTML is live and points only at assets already uploaded,
+  # the superseded ones can go. Running this last means an interrupted deploy
+  # leaves orphaned assets - wasted bytes - rather than a broken page.
+  if ($prune) {
+    Write-Host "==> Pruning superseded assets..." -ForegroundColor Cyan
+    aws s3 sync $cfg.source $dest --delete `
+      "--exclude=*.html" "--exclude=*.xml" "--exclude=robots.txt" `
+      --cache-control "public,max-age=31536000,immutable"
+    if ($LASTEXITCODE -ne 0) { throw "Asset prune failed." }
+  }
 
   # A sitemap may live at any path, so each ships with the project it describes;
   # the root project additionally carries the sitemap index and pages.xml.
