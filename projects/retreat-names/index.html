@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{{TITLE}}</title>
+    <meta name="description" content="{{DESCRIPTION}}" />
+    <link rel="canonical" href="{{CANONICAL}}" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cottage Name Generator" />
+    <meta property="og:title" content="{{TITLE}}" />
+    <meta property="og:description" content="{{DESCRIPTION}}" />
+    <meta property="og:url" content="{{CANONICAL}}" />
+    <meta property="og:image" content="{{ORIGIN}}{{BASE}}og-preview.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/svg+xml" href="{{BASE}}favicon.svg" />
+    <meta name="theme-color" content="#8b6914" />
+
+    <script type="application/ld+json">
+      {{JSONLD}}
+    </script>
+  </head>
+  <body>
+    <div id="root" data-theme="{{THEME}}">{{APP_HTML}}</div>
+    <script type="module" src="/src/entry-client.jsx"></script>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "id": "beach",
+  "title": "Beach House Name Generator",
+  "tagline": "Sun, sand, and a sign on the porch.",
+  "description": "No beach house is complete without a breezy name on a sun-bleached shingle by the door.",
+  "rejectLabel": "Too landlocked. Try again.",
+  "retryLabel": "Try another",
+  "seo": {
+    "slug": "beach",
+    "tab": "Beach House",
+    "title": "Beach House Name Generator - Coastal Names for Your Beach House",
+    "description": "Generate a breezy name for your beach house or cottage by the sea, painted on a sun-bleached shingle. Combinations built from shoreline, tide and coastal wildlife."
+  },
+  "patterns": [
+    { "template": ["{adjective}", "{place}"], "weight": 5 },
+    { "template": ["{nature}", "{place}"], "weight": 4 },
+    { "template": ["{nature}", "{dwelling}"], "weight": 3 },
+    { "template": ["{adjective}", "{dwelling}"], "weight": 3 },
+    { "template": ["{creature}", "{place}"], "weight": 2 },
+    { "template": ["{creature}", "{dwelling}"], "weight": 1 }
+  ],
+  "wordLists": {
+    "adjective": ["Sandy","Salty","Sunny","Breezy","Drifting","Golden","Lazy","Calm","Azure","Turquoise","Coral","Tidal","Windswept","Balmy","Sunlit","Barefoot","Weathered","Bleached","Faded","Rolling","Sparkling","Shimmering","Warm","Gentle","Endless","Blue"],
+    "nature": ["Palm","Coconut","Dune","Coral","Tide","Wave","Shell","Mangrove","Seagrass","Driftwood","Saltspray","Starfish","Conch","Sunrise","Sunset","Lagoon","Reef","Kelp","Pearl","Oyster","Barnacle","Surfside","Shoreline"],
+    "place": ["Cove","Bay","Shore","Point","Inlet","Harbour","Landing","Reach","Shallows","Strand","Beach","Bluff","Overlook","Vista","Horizon","Breakers","Narrows","Channel","Passage","Shoal","Bank","Sandbar","Dunes","Jetty","Pier"],
+    "dwelling": ["Cottage","Bungalow","Retreat","Hideaway","Haven","Shack","House","Cabana","Shelter","Rest","Lodge","Roost","Nest","Perch","Quarters","Villa","Shanty","Hut","Bower"],
+    "creature": ["Pelican","Heron","Sandpiper","Gull","Tern","Dolphin","Seahorse","Turtle","Crab","Lobster","Osprey","Manatee","Stingray","Whale","Egret","Ibis","Flamingo"]
+  },
+  "sign": { "style": "rope-hung", "welcomeText": "Welcome to" }
+}

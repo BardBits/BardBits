@@ -1,0 +1,14 @@
+{
+  "name": "bardbits",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "workspaces": [
+    "projects/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present && node scripts/build-sitemap-index.mjs",
+    "dev": "npm run dev --workspace projects/retreat-names",
+    "site": "node scripts/serve-site.mjs"
+  }
+}

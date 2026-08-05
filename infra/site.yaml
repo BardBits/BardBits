@@ -1,0 +1,280 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Static hosting for the portfolio site: a private S3 bucket served through
+  CloudFront via Origin Access Control. The bucket is never public; only the
+  CloudFront distribution can read from it. Projects live under key prefixes
+  (for example name-generators/) so one bucket and one distribution serve
+  all of them.
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Globally unique S3 bucket name to hold the built sites.
+    AllowedPattern: "[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]"
+    ConstraintDescription: Lowercase letters, numbers, dots and hyphens only.
+  DomainName:
+    Type: String
+    Default: bardbits.ca
+    Description: Apex domain the site is served from.
+  CertificateArn:
+    Type: String
+    Default: ""
+    Description: >
+      ACM certificate ARN, which must live in us-east-1 because that is the only
+      region CloudFront reads certificates from. Leave empty to keep serving the
+      default cloudfront.net URL; see infra/certificate.yaml for the deploy order.
+
+Conditions:
+  # Lets the stack be deployed before the certificate exists, so the hosted zone
+  # can be created and the nameservers pointed at Route 53 first.
+  HasCustomDomain: !Not [!Equals [!Ref CertificateArn, ""]]
+
+Resources:
+  # Created here rather than alongside the certificate so the nameservers exist
+  # before anything needs to validate against them. Route 53 is global, so a
+  # stack in any region can own it.
+  HostedZone:
+    Type: AWS::Route53::HostedZone
+    # Deleting this would change the nameservers and take the domain offline
+    # until GoDaddy was updated again.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Name: !Ref DomainName
+
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    # Holds the deployed sites, so keep it if the stack is ever torn down.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          # Versioning is on so a bad deploy can be rolled back, but old
+          # versions of fingerprinted assets would otherwise accumulate forever.
+          - Id: expire-old-versions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-oac"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # One viewer-request function does all edge routing: a CloudFront behaviour
+  # allows only one, so canonical host, legacy redirects and the directory-index
+  # rewrite have to share this handler rather than being separate resources.
+  #
+  # S3 has no notion of a directory index. DefaultRootObject only covers "/",
+  # so /name-generators/cabin/ would ask S3 for a key that does not exist and
+  # come back 403. This rewrites directory-style URLs onto the real object.
+  # Kept ES5 only: the CloudFront Functions runtime is not full modern JS.
+  DirectoryIndexFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub "${AWS::StackName}-directory-index"
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Canonical host, then legacy path redirects, then directory URLs onto index.html.
+        Runtime: cloudfront-js-2.0
+      FunctionCode: !Sub |
+        function handler(event) {
+            var request = event.request;
+            var host = request.headers.host ? request.headers.host.value : '';
+
+            // Rebuilt once and reused by every redirect below. Dropping the
+            // query string would strip campaign tags off inbound links.
+            var parts = [];
+            for (var key in request.querystring) {
+                var q = request.querystring[key];
+                parts.push(q.value ? key + '=' + q.value : key);
+            }
+            var search = parts.length > 0 ? '?' + parts.join('&') : '';
+
+            // Serve one canonical hostname. Without this the same page would be
+            // reachable on both www and the apex, splitting its search ranking.
+            if (host === 'www.${DomainName}') {
+                return {
+                    statusCode: 301,
+                    statusDescription: 'Moved Permanently',
+                    headers: {
+                        location: { value: 'https://${DomainName}' + request.uri + search }
+                    }
+                };
+            }
+
+            var uri = request.uri;
+
+            // The three themes were sub-pages of one project and are now peers
+            // under the generators hub. These 301s carry the already-indexed
+            // URLs across; without them those pages 404 and whatever ranking
+            // they had is lost rather than transferred to the new addresses.
+            //
+            // Everything under the old prefix redirects, including assets: the
+            // objects behind it were deleted once the site moved, so there is
+            // nothing left to serve and no reason to make an exception.
+            var LEGACY = '/cottage-generator/';
+            if (uri.indexOf(LEGACY) === 0) {
+                var rest = uri.substring(LEGACY.length);
+                // The old mount root served the cottage theme.
+                if (rest === '') { rest = 'cottage/'; }
+                // Land on the trailing-slash form so the rewrite below
+                // handles the follow-up request in the usual way.
+                if (rest.indexOf('.') === -1 && rest.charAt(rest.length - 1) !== '/') {
+                    rest = rest + '/';
+                }
+                return {
+                    statusCode: 301,
+                    statusDescription: 'Moved Permanently',
+                    headers: {
+                        location: { value: 'https://${DomainName}/name-generators/' + rest + search }
+                    }
+                };
+            }
+
+            if (uri.charAt(uri.length - 1) === '/') {
+                request.uri = uri + 'index.html';
+                return request;
+            }
+            var lastSegment = uri.substring(uri.lastIndexOf('/') + 1);
+            if (lastSegment.indexOf('.') === -1) {
+                request.uri = uri + '/index.html';
+            }
+            return request;
+        }
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub "${AWS::StackName} static site"
+        DefaultRootObject: index.html
+        # PriceClass_100 = North America + Europe edges only; cheapest tier.
+        PriceClass: PriceClass_100
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        Aliases: !If
+          - HasCustomDomain
+          - [!Ref DomainName, !Sub "www.${DomainName}"]
+          - !Ref "AWS::NoValue"
+        ViewerCertificate: !If
+          - HasCustomDomain
+          - AcmCertificateArn: !Ref CertificateArn
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          - !Ref "AWS::NoValue"
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          # Managed-CachingOptimized: honours the Cache-Control headers the
+          # deploy script sets per file.
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt DirectoryIndexFunction.FunctionARN
+        # Deliberately no CustomErrorResponses. Mapping 403 to "200 plus
+        # index.html" would make every mistyped URL a soft 404, which search
+        # engines penalise, and the page it pointed at does not exist anyway now
+        # that projects live under key prefixes. Revisit once the portfolio
+        # landing page and a real 404.html are deployed at the bucket root.
+
+  # Apex cannot be a CNAME, which is exactly why DNS lives in Route 53 rather
+  # than at the registrar: an ALIAS record can sit at the zone root. www is
+  # pointed at the same distribution so the function above can 301 it.
+  DnsRecords:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: HasCustomDomain
+    Properties:
+      HostedZoneId: !Ref HostedZone
+      RecordSets:
+        - Name: !Ref DomainName
+          Type: A
+          AliasTarget:
+            DNSName: !GetAtt Distribution.DomainName
+            # Fixed value for every CloudFront distribution, not our zone's ID.
+            HostedZoneId: Z2FDTNDATAQYW2
+            EvaluateTargetHealth: false
+        - Name: !Ref DomainName
+          Type: AAAA
+          AliasTarget:
+            DNSName: !GetAtt Distribution.DomainName
+            HostedZoneId: Z2FDTNDATAQYW2
+            EvaluateTargetHealth: false
+        - Name: !Sub "www.${DomainName}"
+          Type: A
+          AliasTarget:
+            DNSName: !GetAtt Distribution.DomainName
+            HostedZoneId: Z2FDTNDATAQYW2
+            EvaluateTargetHealth: false
+        - Name: !Sub "www.${DomainName}"
+          Type: AAAA
+          AliasTarget:
+            DNSName: !GetAtt Distribution.DomainName
+            HostedZoneId: Z2FDTNDATAQYW2
+            EvaluateTargetHealth: false
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${SiteBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution.Id}"
+
+Outputs:
+  BucketName:
+    Description: Bucket to sync the built site into.
+    Value: !Ref SiteBucket
+  DistributionId:
+    Description: Pass to the deploy script for cache invalidation.
+    Value: !Ref Distribution
+  HostedZoneId:
+    Description: Pass to infra/certificate.yaml so ACM can self-validate.
+    Value: !Ref HostedZone
+  NameServers:
+    Description: Set these as the nameservers for the domain at GoDaddy.
+    Value: !Join [", ", !GetAtt HostedZone.NameServers]
+  CloudFrontUrl:
+    Description: Default distribution URL, always works regardless of DNS.
+    Value: !Sub "https://${Distribution.DomainName}"
+  SiteUrl:
+    Description: Public URL once the certificate and DNS are in place.
+    Value: !If [HasCustomDomain, !Sub "https://${DomainName}", !Sub "https://${Distribution.DomainName}"]

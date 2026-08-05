@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BardBits — Small tools, carefully made</title>
+    <meta name="description" content="A small collection of generators and tools by BardBits." />
+    <link rel="canonical" href="https://bardbits.ca/" />
+    <link rel="icon" type="image/svg+xml" href="/name-generators/favicon.svg" />
+    <meta name="theme-color" content="#8b6914" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        min-height: 100vh;
+        padding: 64px 20px;
+        font-family: "Georgia", "Times New Roman", serif;
+        color: #3a2e14;
+        background: linear-gradient(170deg, #faf3e2 0%, #f0e4c5 45%, #f6ecd6 100%);
+        -webkit-font-smoothing: antialiased;
+      }
+      main { max-width: 640px; margin: 0 auto; }
+      h1 { margin: 0 0 10px; font-size: clamp(34px, 7vw, 48px); font-weight: 400; letter-spacing: 1px; }
+      .tagline { margin: 0 0 52px; font-size: 17px; font-style: italic; color: #5a4a2a; }
+      h2 { margin: 0 0 18px; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #7a6540; font-weight: 400; }
+      .card {
+        display: block;
+        padding: 24px 26px;
+        border: 1px solid #c9b98c;
+        border-radius: 12px;
+        background: #fffaf0;
+        text-decoration: none;
+        color: inherit;
+        transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      }
+      .card:hover { transform: translateY(-2px); border-color: #8b6914; box-shadow: 0 8px 22px rgba(0,0,0,.09); }
+      .card:focus-visible { outline: 3px solid #8b6914; outline-offset: 3px; }
+      .card h3 { margin: 0 0 8px; font-size: 22px; font-weight: 400; }
+      .card p { margin: 0; font-size: 15px; line-height: 1.6; color: #5a4a2a; }
+      footer { margin-top: 64px; font-size: 13px; color: #7a6540; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>BardBits</h1>
+      <p class="tagline">Small tools, carefully made.</p>
+
+      <h2>Projects</h2>
+      <a class="card" href="/name-generators/">
+        <h3>Name Generators</h3>
+        <p>
+          Name your cottage, cabin or beach house, and see it on a hand-carved
+          sign. Thousands of combinations drawn from trees, weather, landscape
+          and wildlife.
+        </p>
+      </a>
+
+      <footer>bardbits.ca</footer>
+    </main>
+  </body>
+</html>

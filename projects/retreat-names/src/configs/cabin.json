@@ -1,0 +1,31 @@
+{
+  "id": "cabin",
+  "title": "Cabin Name Generator",
+  "tagline": "Your cabin needs a name as rugged as the woods around it.",
+  "description": "Whether it's a hunting lodge deep in the bush or a lakeside retreat, every cabin deserves a name that captures the spirit of the wild.",
+  "rejectLabel": "Nah, that doesn't sound tough enough.",
+  "retryLabel": "Try another",
+  "seo": {
+    "slug": "cabin",
+    "tab": "Cabin",
+    "title": "Cabin Name Generator - Rugged Names for Your Cabin or Lodge",
+    "description": "Generate a rugged name for your cabin, hunting lodge or lakeside retreat, branded onto a timber sign. Built from northern trees, rock, weather and wildlife."
+  },
+  "patterns": [
+    { "template": ["{adjective}", "{place}"], "weight": 5 },
+    { "template": ["{nature}", "{place}"], "weight": 4 },
+    { "template": ["{nature}", "{dwelling}"], "weight": 4 },
+    { "template": ["{adjective}", "{dwelling}"], "weight": 3 },
+    { "template": ["{creature}", "{place}"], "weight": 3 },
+    { "template": ["{creature}", "{dwelling}"], "weight": 2 },
+    { "template": ["The", "{creature}", "{dwelling}"], "weight": 1 }
+  ],
+  "wordLists": {
+    "adjective": ["Iron","Granite","Frost","Storm","Thunder","Boulder","Flint","Rugged","Stark","Grizzled","Lone","Savage","Mighty","Dark","Silent","Frozen","Windswept","Battered","Charred","Hollow","Ragged","Twisted","Broken","Burnt","Grey","Black","White","Cold","Deep","High","Lost","Rough","Stout","Grim"],
+    "nature": ["Spruce","Hemlock","Tamarack","Redwood","Lodgepole","Jackpine","Birch","Poplar","Alder","Balsam","Cedar","Firwood","Pinecone","Ironwood","Deadfall","Driftwood","Stoneroot","Wildfire","Timber","Boulder","Flint","Granite","Basalt","Slate","Thorn","Briar","Bark","Root","Stump","Snag"],
+    "place": ["Peak","Summit","Ridge","Pass","Canyon","Gorge","Basin","Falls","Rapids","Bluff","Cliff","Crest","Hollow","Creek","Fork","Narrows","Gap","Run","Gulch","Draw","Ravine","Ledge","Outcrop","Notch","Bench","Saddle","Divide","Portage","Landing","Crossing","Reach","Bend"],
+    "dwelling": ["Lodge","Outpost","Camp","Station","Cabin","Shack","Shelter","Stronghold","Den","Lair","Bunker","Hideout","Roost","Post","Quarters","Garrison","Retreat","Bunkhouse","Base","Stand"],
+    "creature": ["Bear","Wolf","Moose","Eagle","Hawk","Lynx","Cougar","Wolverine","Elk","Caribou","Osprey","Falcon","Coyote","Marten","Fisher","Grouse","Loon","Pike","Muskie","Trout"]
+  },
+  "sign": { "style": "post-mount", "welcomeText": "Welcome to" }
+}

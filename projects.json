@@ -1,0 +1,49 @@
+{
+  "origin": "https://bardbits.ca",
+  "_comment": [
+    "Single source of truth for what deploys where. Read by scripts/deploy-project.ps1,",
+    "scripts/serve-site.mjs and scripts/build-sitemap-index.mjs — keeping the list in one",
+    "place is what stops a project's prefix drifting between deploying, previewing and",
+    "being indexed.",
+    "",
+    "order            root-first; a project mounted deeper must never overwrite its parent",
+    "prefix           S3 key prefix; \"\" is the bucket root",
+    "workspace        npm workspace to build, or null for a project with no build step",
+    "prune            may this project's sync delete keys under its prefix?",
+    "protectRootIndex keep <prefix>/index.html while pruning, because another project owns it",
+    "pages            static URLs this project contributes to the sitemap",
+    "sitemap          true if the build emits its own sitemap.xml to list in the index"
+  ],
+  "projects": [
+    {
+      "name": "site-root",
+      "source": "projects/site-root",
+      "prefix": "",
+      "workspace": null,
+      "prune": false,
+      "protectRootIndex": false,
+      "pages": ["/"],
+      "sitemap": false
+    },
+    {
+      "name": "name-generators-hub",
+      "source": "projects/name-generators-hub",
+      "prefix": "name-generators",
+      "workspace": null,
+      "prune": false,
+      "protectRootIndex": false,
+      "pages": ["/name-generators/"],
+      "sitemap": false
+    },
+    {
+      "name": "retreat-names",
+      "source": "projects/retreat-names/dist",
+      "prefix": "name-generators",
+      "workspace": "projects/retreat-names",
+      "prune": true,
+      "protectRootIndex": true,
+      "pages": [],
+      "sitemap": true
+    }
+  ]
+}

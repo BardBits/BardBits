@@ -1,0 +1,31 @@
+{
+  "id": "cottage",
+  "title": "Cottage Name Generator",
+  "tagline": "Every cottage deserves a name worthy of its charm.",
+  "description": "How authentic is a cottage or cabin without a suitably rustic name? A complete cottage includes an antique etched plaque or a hand-carved wooden sign proudly announcing its title!",
+  "rejectLabel": "That's a silly name for a cottage.",
+  "retryLabel": "Try another",
+  "seo": {
+    "slug": "cottage",
+    "tab": "Cottage",
+    "title": "Cottage Name Generator - Rustic Names for Your Cottage",
+    "description": "Generate a rustic name for your cottage and preview it on a hand-carved sign. Thousands of combinations drawn from woodland trees, wildflowers and landscape features."
+  },
+  "patterns": [
+    { "template": ["{adjective}", "{place}"], "weight": 5 },
+    { "template": ["{nature}", "{place}"], "weight": 5 },
+    { "template": ["{nature}", "{dwelling}"], "weight": 4 },
+    { "template": ["{adjective}", "{dwelling}"], "weight": 3 },
+    { "template": ["The", "{nature}", "{dwelling}"], "weight": 1 },
+    { "template": ["{creature}", "{place}"], "weight": 2 },
+    { "template": ["{creature}", "{dwelling}"], "weight": 1 }
+  ],
+  "wordLists": {
+    "adjective": ["Mossy","Golden","Silver","Rustic","Misty","Sunny","Shady","Hidden","Whispering","Gentle","Old","Wild","Still","Quiet","Little","Winding","Drifting","Wandering","Crimson","Amber","Dusky","Sleepy","Crooked","Tumbled","Weathered","Painted","Tangled","Dappled","Twilight","Moonlit","Starlit","Sunken","Sheltered","Lonely","Forgotten","Ancient","Merry","Bonny","Jolly","Rambling","Drowsy","Copper","Stony"],
+    "nature": ["Pine","Willow","Cedar","Birch","Fern","Heather","Ivy","Sage","Briar","Rowan","Maple","Aspen","Laurel","Holly","Primrose","Foxglove","Clover","Juniper","Alder","Elm","Oak","Ash","Linden","Magnolia","Hazel","Thistle","Bramble","Honeysuckle","Lavender","Bluebell","Hawthorn","Chestnut","Dogwood","Mulberry","Rosemary","Thyme","Yarrow","Acorn","Sorrel","Nettle","Rue","Balsam","Moss","Lichen","Reed","Sedge","Buttercup"],
+    "place": ["Trail","Creek","Hollow","Meadow","Ridge","Glen","Dell","Nook","Cove","Bend","Crossing","Brook","Spring","Bluff","Knoll","Hill","Dale","Thicket","Copse","Glade","Lea","Moor","Heath","Fen","Field","Lane","Path","Walk","Point","Edge","Gap","Bottom","Reach","Ford","Weir","Bank","Brink","Shelf","Notch","Spur","Fold"],
+    "dwelling": ["Haven","Rest","Hearth","Roost","Nest","Perch","Shade","Watch","Gate","Bridge","Mill","Well","Forge","Lodge","Cottage","House","Keep","Bower","Retreat","Hideaway","Sanctuary","Shelter","Harbour","Burrow","Den","Stead","Hold","Garth"],
+    "creature": ["Fox","Heron","Wren","Badger","Otter","Owl","Finch","Hare","Lark","Robin","Sparrow","Dove","Raven","Stag","Stoat","Swallow","Kingfisher","Dormouse","Hedgehog"]
+  },
+  "sign": { "style": "hanging-plaque", "welcomeText": "Welcome to" }
+}

@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  TLS certificate for the portfolio site. Deployed separately from site.yaml
+  because CloudFront only reads certificates from us-east-1, and one stack
+  cannot span regions. Deploy this to us-east-1 no matter where the rest lives.
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: bardbits.ca
+    Description: Apex domain to certify. The www subdomain is added automatically.
+  HostedZoneId:
+    Type: String
+    Description: >
+      Route 53 zone for the domain, from the HostedZoneId output of site.yaml.
+      ACM writes its validation records straight into this zone, so no manual
+      DNS entry is needed.
+
+Resources:
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames:
+        - !Sub "www.${DomainName}"
+      ValidationMethod: DNS
+      # Naming the hosted zone is what makes validation automatic. Without it,
+      # ACM waits for a CNAME to be added by hand and the stack sits pending.
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+        - DomainName: !Sub "www.${DomainName}"
+          HostedZoneId: !Ref HostedZoneId
+
+Outputs:
+  CertificateArn:
+    Description: Pass to site.yaml as the CertificateArn parameter.
+    Value: !Ref Certificate

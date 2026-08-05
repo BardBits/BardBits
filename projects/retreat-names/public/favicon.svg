@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#f2e7cb" />
+  <!-- bracket + chains -->
+  <path d="M32 8 v6 M32 14 q0 6 -12 9 M32 14 q0 6 12 9" fill="none" stroke="#3a3a3a" stroke-width="3" stroke-linecap="round" />
+  <!-- hanging plaque -->
+  <rect x="12" y="23" width="40" height="28" rx="5" fill="#c9a06a" stroke="#6b4a28" stroke-width="2.5" />
+  <!-- carved lines standing in for the name -->
+  <rect x="19" y="31" width="26" height="3.5" rx="1.75" fill="#2a1a08" />
+  <rect x="24" y="40" width="16" height="3.5" rx="1.75" fill="#2a1a08" />
+</svg>

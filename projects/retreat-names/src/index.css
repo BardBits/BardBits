@@ -1,0 +1,237 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: "Georgia", "Times New Roman", serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 36px 16px 72px;
+  color: var(--text);
+  transition: background 0.6s ease;
+}
+
+.shell {
+  max-width: 620px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Breadcrumb ─────────────────────────────── */
+/* Deliberately quiet: the sign is the hero, so this sits above the tabs
+   without competing with them for attention. */
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.crumbs a {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.crumbs a:hover { color: var(--text); border-bottom-color: var(--accent); }
+
+.crumbs a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.crumbs [aria-current="page"] { color: var(--text); }
+
+.crumb-sep { color: var(--border); }
+
+/* ── Theme tabs ─────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 34px;
+}
+
+.tab {
+  display: inline-block;
+  padding: 9px 20px;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color .25s ease, border-color .25s ease, background .25s ease;
+}
+
+.tab:hover { color: var(--text); border-color: var(--accent); }
+
+.tab[aria-current="page"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ── Header ─────────────────────────────────── */
+.title {
+  margin: 0 0 8px;
+  font-size: clamp(26px, 5vw, 34px);
+  font-weight: 400;
+  letter-spacing: .5px;
+  text-align: center;
+}
+
+.tagline {
+  margin: 0 0 36px;
+  font-size: 16px;
+  font-style: italic;
+  color: var(--sub);
+  text-align: center;
+}
+
+/* ── The sign ───────────────────────────────── */
+.sign-stage {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 32px;
+}
+
+.sign-pop { animation: signIn .45s cubic-bezier(.2, .8, .25, 1) both; }
+
+@keyframes signIn {
+  from { opacity: 0; transform: translateY(-10px) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── Controls — reject line stacked above the button ── */
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.reject {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  font-style: italic;
+  text-align: center;
+}
+
+.btn {
+  padding: 13px 36px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: .6px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .16);
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.09);
+  box-shadow: 0 7px 18px rgba(0, 0, 0, .22);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, .2);
+}
+
+.tab:focus-visible, .btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ── Copy + stat ────────────────────────────── */
+.description {
+  max-width: 500px;
+  margin: 0 0 36px;
+  color: var(--sub);
+  font-size: 15px;
+  line-height: 1.75;
+  text-align: center;
+}
+
+.stat {
+  width: 100%;
+  max-width: 540px;
+  padding: 18px 0;
+  margin-bottom: 32px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.stat-value {
+  margin-top: 5px;
+  font-size: 23px;
+  color: var(--text);
+}
+
+/* ── History ────────────────────────────────── */
+.history { width: 100%; }
+
+.history-title {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.chip {
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--chip-bg);
+  color: var(--sub);
+  font-size: 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
