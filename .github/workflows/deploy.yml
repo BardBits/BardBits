@@ -1,0 +1,80 @@
+name: Deploy
+
+# Deploys on every push to main. There is no stored AWS credential: the job
+# presents a short-lived OIDC token, STS validates it against the trust policy
+# in infra/github-oidc.yaml, and hands back credentials that expire in an hour.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Least privilege for the token itself, not just for AWS. id-token lets the job
+# request the OIDC token; contents:read is all the checkout needs. Declaring
+# these here overrides the repository default for this workflow.
+permissions:
+  id-token: write
+  contents: read
+
+# A second push while one deploy is mid-flight would race two syncs against the
+# same bucket. Queue instead, and never cancel a run that may have already
+# uploaded assets but not yet the HTML that references them.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ca-central-1
+  BUCKET: darou-portfolio-657918590662
+  DISTRIBUTION_ID: E3RJMPASAQD8EC
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build all projects
+        run: npm run build
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: gha-${{ github.run_id }}
+
+      - name: Confirm the assumed identity
+        run: aws sts get-caller-identity
+
+      # Order matters. retreat-names prunes its prefix, so it goes first; the
+      # hub restores the index.html that lives alongside it; site-root goes last
+      # so the sitemap index reflects what the other two just built.
+      - name: Deploy retreat-names
+        shell: pwsh
+        run: ./scripts/deploy-project.ps1 -Project retreat-names -Bucket $env:BUCKET -DistributionId $env:DISTRIBUTION_ID -SkipBuild
+
+      - name: Deploy name-generators-hub
+        shell: pwsh
+        run: ./scripts/deploy-project.ps1 -Project name-generators-hub -Bucket $env:BUCKET -DistributionId $env:DISTRIBUTION_ID -SkipBuild
+
+      - name: Deploy site-root
+        shell: pwsh
+        run: ./scripts/deploy-project.ps1 -Project site-root -Bucket $env:BUCKET -DistributionId $env:DISTRIBUTION_ID -SkipBuild
+
+      # Proves the deploy actually reached the live domain rather than just
+      # exiting zero. Fails the run if any page stops returning 200.
+      - name: Smoke test the live site
+        run: |
+          set -e
+          for path in / /name-generators/ /name-generators/cottage/ /name-generators/cabin/ /name-generators/beach/ /sitemap.xml /robots.txt; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 5 "https://bardbits.ca${path}")
+            echo "${code}  ${path}"
+            [ "$code" = "200" ] || exit 1
+          done

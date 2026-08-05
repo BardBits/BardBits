@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Lets GitHub Actions deploy this site without any stored AWS credential. GitHub
+  presents a short-lived OIDC token describing the workflow run; STS validates it
+  and returns credentials that expire in an hour. Nothing persists in the repo,
+  so there is no key to rotate, leak or forget.
+
+Parameters:
+  GitHubOrg:
+    Type: String
+    Default: BardBits
+    Description: GitHub account that owns the repository.
+
+  RepositoryName:
+    Type: String
+    Default: BardBits
+    Description: Repository allowed to assume the deploy role.
+
+  BranchName:
+    Type: String
+    Default: main
+    Description: >
+      The only branch allowed to deploy. Pull requests, forks and other branches
+      get no credentials at all, which matters on a public repository.
+
+  BucketName:
+    Type: String
+    Default: darou-portfolio-657918590662
+    Description: Site bucket the deploy role may write to.
+
+  DistributionId:
+    Type: String
+    Default: E3RJMPASAQD8EC
+    Description: CloudFront distribution the deploy role may invalidate.
+
+Resources:
+  # One provider serves every repository in the account. Deliberately no
+  # ThumbprintList: since July 2023 AWS validates this endpoint against a
+  # library of trusted root CAs rather than a pinned certificate fingerprint,
+  # so a hardcoded thumbprint would be dead weight that breaks on rotation.
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      Tags:
+        - Key: managed-by
+          Value: cloudformation
+
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${RepositoryName}-github-deploy"
+      Description: !Sub "Deploys ${RepositoryName} from GitHub Actions on ${BranchName}."
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProvider
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              # Both conditions are load-bearing. Without the sub match, ANY
+              # GitHub Actions workflow anywhere could assume this role - the
+              # classic misconfiguration. StringEquals, not StringLike: no
+              # wildcard, so a branch named "main-something" cannot match.
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}/${RepositoryName}:ref:refs/heads/${BranchName}"
+      Policies:
+        - PolicyName: deploy-static-site
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # Enough to run scripts/deploy-project.ps1 and nothing else. If
+              # this role were ever misused the blast radius is the static site,
+              # which a redeploy restores.
+              - Sid: ListTheBucket
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource: !Sub "arn:aws:s3:::${BucketName}"
+              - Sid: WriteSiteObjects
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub "arn:aws:s3:::${BucketName}/*"
+              - Sid: InvalidateTheCdn
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:GetInvalidation
+                Resource: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${DistributionId}"
+      Tags:
+        - Key: managed-by
+          Value: cloudformation
+
+Outputs:
+  DeployRoleArn:
+    Description: Set as the AWS_DEPLOY_ROLE repository variable in GitHub.
+    Value: !GetAtt DeployRole.Arn
+
+  OidcProviderArn:
+    Description: Shared by any future repository in this account.
+    Value: !Ref GitHubOidcProvider
