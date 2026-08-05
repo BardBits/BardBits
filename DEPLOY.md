@@ -95,9 +95,74 @@ Validate template changes before deploying them:
 cfn-lint infra/site.yaml
 ```
 
+### 3. Let GitHub Actions deploy
+
+```bash
+aws cloudformation deploy --template-file infra/github-oidc.yaml --stack-name github-oidc --capabilities CAPABILITY_NAMED_IAM --region ca-central-1
+```
+
+**This one needs `DJS_Admin`, not `agent-toolkit`.** Creating an OIDC provider is
+an `iam:*` action, and `agent-toolkit` is deliberately blocked from those — the
+guardrail working as intended, not a misconfiguration. Sign in as `DJS_Admin`
+for this step only, then switch back.
+
+Then publish the role ARN to the repository so the workflow can find it:
+
+```bash
+gh variable set AWS_DEPLOY_ROLE --body "$(aws cloudformation describe-stacks --stack-name github-oidc --region ca-central-1 --query "Stacks[0].Outputs[?OutputKey=='DeployRoleArn'].OutputValue" --output text)"
+```
+
+The stack takes the GitHub account and repository **numeric ids** as parameters,
+not just their names. Read them with:
+
+```bash
+gh api repos/<org>/<repo> --jq '{repo: .id, owner: .owner.id}'
+```
+
 ## Deploying
 
-One project at a time, by name:
+**Push to `main`.** `.github/workflows/deploy.yml` builds every project, deploys
+all three, and smoke-tests the live domain, failing the run if any page stops
+returning 200. There is nothing to run by hand.
+
+```bash
+git push
+```
+
+Watch it with `gh run watch`, or re-run the last one from the Actions tab. The
+workflow also accepts a manual trigger (`workflow_dispatch`) for redeploying
+without a code change.
+
+### How it reaches AWS
+
+No AWS credential is stored anywhere — the account has no access keys at all.
+GitHub mints a short-lived OIDC token describing the run, STS validates it
+against the trust policy in `infra/github-oidc.yaml`, and returns credentials
+that expire within the hour.
+
+The trust policy pins both `aud` and `sub` with `StringEquals`, so only this
+repository on `main` can assume the role. Pull requests, forks and other
+branches get no credentials at all, which matters on a public repository.
+
+The `sub` it matches carries GitHub's **immutable numeric ids** —
+`repo:<org>@<orgId>/<repo>@<repoId>:ref:refs/heads/main` — not the name-only
+form most guides show. Names can be renamed and later reclaimed by someone else;
+ids cannot. If deploys ever start failing with `AccessDenied` on
+`sts:AssumeRoleWithWebIdentity`, read the real claim out of CloudTrail rather
+than guessing at its shape:
+
+```bash
+aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRoleWithWebIdentity --max-results 5 --region ca-central-1
+```
+
+The role can do very little by design: S3 read/write on the site bucket, and
+`CreateInvalidation` on the one distribution. Nothing else.
+
+### Deploying by hand
+
+Still supported, and still the right tool when testing a change to the deploy
+script itself, or recovering from a half-finished CI run. Requires `aws login`
+as described above.
 
 ```bash
 ./scripts/deploy-project.ps1 -Project retreat-names -Bucket darou-portfolio-657918590662 -DistributionId E3RJMPASAQD8EC
@@ -115,6 +180,28 @@ whatever the other projects just built:
 ./scripts/deploy-project.ps1 -Project name-generators-hub -Bucket BUCKET -DistributionId DIST
 ./scripts/deploy-project.ps1 -Project site-root -Bucket BUCKET -DistributionId DIST
 ```
+
+### Why a deploy is three phases
+
+`deploy-project.ps1` uploads assets, then HTML, then prunes superseded assets.
+The pruning is deliberately last.
+
+Pruning alongside the asset upload deletes the files the *currently live* HTML
+still references, before the HTML replacing it has been uploaded. A failure
+between those steps leaves the site serving pages whose CSS and JS 404. That is
+not hypothetical — it happened on the first CI run, and bardbits.ca served
+unstyled, non-interactive pages until it was redeployed by hand.
+
+Uploads are additive and pruning runs afterwards, so an interrupted deploy
+leaves orphaned assets — wasted bytes — instead of a broken page.
+
+### Why the filters look like `--exclude=*`
+
+PowerShell on Linux glob-expands a bare `*` against the working directory before
+the AWS CLI sees it, so `--exclude "*"` arrives as a list of repo files and the
+CLI rejects it. Windows does not do this, so it only appears on the CI runner.
+Keeping the wildcard glued to its option name leaves nothing to expand. Any new
+filter added to that script must use the same form.
 
 ## Previewing the whole site locally
 

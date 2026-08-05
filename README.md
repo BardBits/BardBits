@@ -49,6 +49,10 @@ Pages are prerendered to static HTML: crawlers get real content without running
 JavaScript, and the browser hydrates the same markup. Anything affecting layout
 must therefore be deterministic across Node and the browser.
 
+Pushing to `main` deploys. GitHub Actions builds every project, publishes them,
+and smoke-tests the live domain, authenticating to AWS through OIDC federation —
+the account holds no access keys, and nothing is stored in the repository.
+
 See [DEPLOY.md](DEPLOY.md) for deployment, edge routing, caching and DNS.
 
 ## Stack
