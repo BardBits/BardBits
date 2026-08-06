@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  CloudFront standard logging (v2) for the portfolio site, delivering access
+  logs to the log bucket created by the portfolio-site stack.
+
+  Deploy this to us-east-1 regardless of where the bucket or distribution live:
+  the CloudWatch Logs delivery API for CloudFront only exists there, the same
+  way certificate.yaml has to be deployed there for ACM. The bucket itself
+  stays in ca-central-1 with the rest of the stack, so visitor data does not
+  leave the region it was chosen for.
+
+Parameters:
+  DistributionId:
+    Type: String
+    Default: E3RJMPASAQD8EC
+    Description: Distribution whose access logs should be delivered.
+
+  LogBucketArn:
+    Type: String
+    Description: >
+      LogBucketArn output of the portfolio-site stack. Passed rather than
+      imported, because cross-region stack exports are not possible.
+
+Resources:
+  # One delivery source per distribution is the hard limit. If this stack is
+  # ever torn down and rebuilt and creation fails with "This ResourceId has
+  # already been used in another Delivery Source", the orphaned source has to
+  # go first: aws logs delete-delivery-source --name <name> --region us-east-1
+  DeliverySource:
+    Type: AWS::Logs::DeliverySource
+    Properties:
+      Name: !Sub "${AWS::StackName}-cloudfront"
+      ResourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${DistributionId}"
+      LogType: ACCESS_LOGS
+
+  # OutputFormat cannot be changed after creation - switching it means deleting
+  # the delivery and making another. json is chosen for readability when
+  # inspecting logs directly; w3c would suit an Athena table better.
+  DeliveryDestination:
+    Type: AWS::Logs::DeliveryDestination
+    Properties:
+      Name: !Sub "${AWS::StackName}-s3"
+      DestinationResourceArn: !Ref LogBucketArn
+      OutputFormat: json
+
+  Delivery:
+    Type: AWS::Logs::Delivery
+    Properties:
+      # Takes the source's NAME, not its ARN.
+      DeliverySourceName: !Ref DeliverySource
+      DeliveryDestinationArn: !GetAtt DeliveryDestination.Arn
+      S3SuffixPath: "{yyyy}/{MM}/{dd}"
+      S3EnableHiveCompatiblePath: false
+      # Deliberately narrower than the default field set, which includes c-ip
+      # and cs(Cookie). Nothing here needs to identify individual visitors, and
+      # not collecting personal data beats securing it. These answer what is
+      # being requested, what is failing and what is slow. Confirmed against
+      # `aws logs describe-configuration-templates`: no field is mandatory, so
+      # omitting c-ip is permitted rather than merely tolerated.
+      RecordFields:
+        - date
+        - time
+        - x-edge-location
+        - x-host-header
+        - cs-method
+        - cs-uri-stem
+        - cs-uri-query
+        - sc-status
+        - sc-bytes
+        - time-taken
+        - time-to-first-byte
+        - cs-protocol
+        - cs(Referer)
+        - cs(User-Agent)
+        - c-country
+        - x-edge-result-type
+        - x-edge-detailed-result-type
+        - x-edge-request-id
+
+Outputs:
+  DeliveryId:
+    Description: Delivery linking the distribution to the log bucket.
+    Value: !GetAtt Delivery.DeliveryId
+
+  LogPath:
+    Description: >
+      Where the logs land. CloudFront prepends AWSLogs/<account>/CloudFront to
+      the suffix path whenever the destination is a bucket with no prefix.
+    Value: !Sub
+      - "s3://${Bucket}/AWSLogs/${AWS::AccountId}/CloudFront/{yyyy}/{MM}/{dd}/"
+      - Bucket: !Select [5, !Split [":", !Ref LogBucketArn]]

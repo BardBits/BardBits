@@ -80,6 +80,68 @@ Resources:
             AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 7
 
+  # Access logs get their own bucket, never a prefix of SiteBucket. The site
+  # bucket policy lets CloudFront read every key under it, so a log written
+  # there would be downloadable at https://<domain>/AWSLogs/... by anyone who
+  # guessed the path - and access logs describe real visitors.
+  #
+  # No versioning: logs are write-once and expire in 30 days, so versions would
+  # only cost money. ACLs stay disabled - standard logging (v2) writes with the
+  # bucket policy below and does not need them, unlike the legacy logging that
+  # required BucketOwnerPreferred.
+  LogBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${BucketName}-logs"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          # CloudFront never deletes delivered logs, so without this they
+          # accumulate for as long as the bucket exists.
+          - Id: expire-logs
+            Status: Enabled
+            ExpirationInDays: 30
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+
+  # Written explicitly rather than relying on AWS to attach it. The docs say
+  # the required policy is added automatically when logging is enabled, but
+  # that describes the console flow; this stack creates the delivery through
+  # raw CloudFormation resources in a different region.
+  LogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref LogBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AWSLogsDeliveryWrite
+            Effect: Allow
+            Principal:
+              Service: delivery.logs.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub "${LogBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref "AWS::AccountId"
+              # Delivery sources for CloudFront always live in us-east-1,
+              # whatever region the bucket is in.
+              ArnLike:
+                aws:SourceArn: !Sub "arn:aws:logs:us-east-1:${AWS::AccountId}:delivery-source:*"
+
   OriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
@@ -353,6 +415,10 @@ Resources:
                 AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution.Id}"
 
 Outputs:
+  LogBucketArn:
+    Description: Pass to infra/logging.yaml as LogBucketArn (that stack is us-east-1).
+    Value: !GetAtt LogBucket.Arn
+
   BucketName:
     Description: Bucket to sync the built site into.
     Value: !Ref SiteBucket
