@@ -27,13 +27,16 @@ export default function App({ themeId }) {
   }, [config, result]);
 
   /**
-   * Clicking through to another generator also supersedes the current name.
-   * These tabs are real links, so the document unloads before React could
-   * flush state — write straight to storage instead, which is synchronous.
+   * Clicking a generator tab supersedes the current name. That includes the
+   * tab you are already on: it is a real link, so it reloads the page and
+   * draws a fresh name exactly like the others do. Skipping it there was an
+   * inconsistency — a new name appeared but the old one was never recorded.
+   *
+   * These tabs unload the document before React could flush state, so write
+   * straight to storage instead, which is synchronous.
    */
   const supersedeBeforeLeaving = useCallback(
-    (targetId, event) => {
-      if (targetId === themeId) return;
+    (event) => {
       // Modified clicks open a new tab; this document isn't going anywhere,
       // so recording now would put the visible name back in its own list.
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
@@ -96,7 +99,7 @@ export default function App({ themeId }) {
               className="tab"
               href={pathFor(route.slug)}
               aria-current={themeId === route.id ? "page" : undefined}
-              onClick={(event) => supersedeBeforeLeaving(route.id, event)}
+              onClick={supersedeBeforeLeaving}
             >
               {route.tab}
             </a>
