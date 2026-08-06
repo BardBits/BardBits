@@ -171,6 +171,61 @@ Resources:
             return request;
         }
 
+  # Nothing on this site loads from another origin: no CDN fonts, no analytics,
+  # no third-party scripts. The policy says so explicitly, which turns an
+  # injected <script src="evil.example"> into a no-op.
+  #
+  # style-src needs 'unsafe-inline' and that is a real weakening, not an
+  # oversight. The two static pages carry an inline <style> block and the app
+  # sets CSS custom properties through React style attributes. Removing it would
+  # need per-build hashes for the blocks and a refactor away from style props,
+  # which buys little on a site with no user input to inject through.
+  SecurityHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-security-headers"
+        Comment: Security headers for all responses.
+        SecurityHeadersConfig:
+          ContentSecurityPolicy:
+            Override: true
+            ContentSecurityPolicy: >-
+              default-src 'self';
+              script-src 'self';
+              style-src 'self' 'unsafe-inline';
+              img-src 'self' data:;
+              font-src 'self';
+              connect-src 'self';
+              object-src 'none';
+              base-uri 'self';
+              frame-ancestors 'none';
+              form-action 'none';
+              upgrade-insecure-requests
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            Override: true
+            FrameOption: DENY
+          ReferrerPolicy:
+            Override: true
+            ReferrerPolicy: strict-origin-when-cross-origin
+          # includeSubDomains commits every future subdomain to HTTPS. Safe here
+          # - the only one is www, which CloudFront already serves over TLS.
+          # Deliberately no preload: that list is slow and painful to leave.
+          StrictTransportSecurity:
+            Override: true
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: true
+            Preload: false
+        # Permissions-Policy has no first-class field, so it goes through as a
+        # custom header. Denies capabilities the site never asks for, so a
+        # compromised page cannot quietly prompt for them.
+        CustomHeadersConfig:
+          Items:
+            - Header: Permissions-Policy
+              Override: true
+              Value: "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+
   Distribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -207,6 +262,7 @@ Resources:
           # Managed-CachingOptimized: honours the Cache-Control headers the
           # deploy script sets per file.
           CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+          ResponseHeadersPolicyId: !Ref SecurityHeadersPolicy
           FunctionAssociations:
             - EventType: viewer-request
               FunctionARN: !GetAtt DirectoryIndexFunction.FunctionARN
@@ -238,6 +294,34 @@ Resources:
             DNSName: !GetAtt Distribution.DomainName
             HostedZoneId: Z2FDTNDATAQYW2
             EvaluateTargetHealth: false
+        # Only Amazon may issue certificates for this domain, and nobody may
+        # issue a wildcard. Without this, any public CA in the world can be
+        # talked into issuing a valid certificate for bardbits.ca.
+        # No iodef: it would publish a contact address in DNS for scrapers.
+        - Name: !Ref DomainName
+          Type: CAA
+          TTL: 3600
+          ResourceRecords:
+            - '0 issue "amazon.com"'
+            - '0 issuewild ";"'
+
+        # This domain neither sends nor receives mail, and saying so is what
+        # stops it being spoofed. The null MX (RFC 7505) refuses delivery
+        # outright; DMARC tells receivers to reject anything claiming to be
+        # from here. No rua address, so there are no aggregate reports - that
+        # would mean publishing an inbox in DNS, and enforcement works without.
+        - Name: !Ref DomainName
+          Type: MX
+          TTL: 3600
+          ResourceRecords:
+            - "0 ."
+
+        - Name: !Sub "_dmarc.${DomainName}"
+          Type: TXT
+          TTL: 3600
+          ResourceRecords:
+            - '"v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s"'
+
         - Name: !Sub "www.${DomainName}"
           Type: A
           AliasTarget:
