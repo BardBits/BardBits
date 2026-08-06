@@ -64,8 +64,17 @@ Resources:
         Rules:
           # Versioning is on so a bad deploy can be rolled back, but old
           # versions of fingerprinted assets would otherwise accumulate forever.
+          #
+          # ExpiredObjectDeleteMarker sweeps up the tombstones left behind when
+          # an object is deleted outright rather than replaced - the retired
+          # cottage-generator/ prefix left eleven. It only removes a marker once
+          # every version beneath it has already expired, so it can never
+          # discard anything still recoverable. Note it sits directly on the
+          # rule: CloudFormation flattens this property, while the raw S3 API
+          # nests it under Expiration, and copying that shape fails cfn-lint.
           - Id: expire-old-versions
             Status: Enabled
+            ExpiredObjectDeleteMarker: true
             NoncurrentVersionExpiration:
               NoncurrentDays: 30
             AbortIncompleteMultipartUpload:
