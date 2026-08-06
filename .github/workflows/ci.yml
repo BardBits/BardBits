@@ -1,0 +1,70 @@
+name: CI
+
+# Runs on pull requests, so a broken build is caught before it reaches main
+# rather than after. Deploy only runs post-merge, which means without this a
+# build that fails lands on the default branch and the first sign of trouble
+# is a red deploy against production.
+on:
+  pull_request:
+    branches: [main]
+
+# Read-only, and deliberately no id-token. This workflow must never be able to
+# obtain AWS credentials: pull requests can come from forks on a public
+# repository, and a check that can assume the deploy role would hand the
+# account to anyone who opens one.
+permissions:
+  contents: read
+
+# Unlike the deploy workflow, superseding a check is safe and desirable - only
+# the latest commit on the branch matters.
+concurrency:
+  group: ci-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      # npm ci, not npm install: fails if package-lock.json disagrees with
+      # package.json instead of quietly resolving something different from what
+      # the deploy will install.
+      - name: Install
+        run: npm ci
+
+      - name: Build all projects
+        run: npm run build
+
+      # The templates are only otherwise linted by hand, and both times a
+      # property shape was wrong this session, cfn-lint was what caught it -
+      # CloudFormation flattens some properties the underlying API nests.
+      - name: Install cfn-lint
+        run: pip install --disable-pip-version-check cfn-lint
+
+      - name: Validate CloudFormation templates
+        run: cfn-lint infra/site.yaml infra/certificate.yaml infra/github-oidc.yaml infra/logging.yaml
+
+      # Guards the invariant that makes the shared-prefix model safe: every
+      # project's declared source must exist after a build, or a deploy would
+      # sync an empty directory over a live prefix.
+      - name: Check every project in projects.json built
+        run: |
+          set -e
+          node -e '
+            const fs = require("fs");
+            const { projects } = JSON.parse(fs.readFileSync("projects.json", "utf8"));
+            let bad = 0;
+            for (const p of projects) {
+              const ok = fs.existsSync(p.source);
+              console.log(`${ok ? "ok  " : "FAIL"}  ${p.name} -> ${p.source}`);
+              if (!ok) bad++;
+            }
+            process.exit(bad ? 1 : 0);
+          '
