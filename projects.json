@@ -22,7 +22,7 @@
       "workspace": null,
       "prune": false,
       "protectRootIndex": false,
-      "pages": ["/", "/privacy/"],
+      "pages": ["/", "/about/", "/privacy/"],
       "sitemap": false
     },
     {

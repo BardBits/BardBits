@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About — BardBits</title>
+    <meta name="description" content="How BardBits is built: written with Claude Code, deployed to AWS from source, and kept deliberately free of tracking." />
+    <link rel="canonical" href="https://bardbits.ca/about/" />
+    <link rel="icon" type="image/svg+xml" href="/name-generators/favicon.svg" />
+    <meta name="theme-color" content="#8b6914" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "BardBits", "item": "https://bardbits.ca/" },
+          { "@type": "ListItem", "position": 2, "name": "About", "item": "https://bardbits.ca/about/" }
+        ]
+      }
+    </script>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        min-height: 100vh;
+        padding: 56px 20px 80px;
+        font-family: "Georgia", "Times New Roman", serif;
+        color: #3a2e14;
+        background: linear-gradient(170deg, #faf3e2 0%, #f0e4c5 45%, #f6ecd6 100%);
+        -webkit-font-smoothing: antialiased;
+      }
+      main { max-width: 660px; margin: 0 auto; }
+      .crumb { margin: 0 0 28px; font-size: 14px; color: #7a6540; }
+      .crumb a { color: #7a6540; }
+      h1 { margin: 0 0 28px; font-size: clamp(30px, 6vw, 40px); font-weight: 400; letter-spacing: 1px; }
+      h2 {
+        margin: 44px 0 14px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #7a6540;
+        font-weight: 400;
+        border-bottom: 1px solid #c9b98c;
+        padding-bottom: 8px;
+      }
+      p, li { font-size: 16px; line-height: 1.75; color: #4a3c1e; }
+      a { color: #7a6540; }
+      ul { padding-left: 22px; }
+      li { margin-bottom: 10px; }
+      .lead {
+        padding: 20px 24px;
+        border: 1px solid #c9b98c;
+        border-radius: 12px;
+        background: #fffaf0;
+        font-size: 17px;
+      }
+      code {
+        font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+        font-size: 14px;
+        background: #fffaf0;
+        border: 1px solid #e0d4ae;
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+      footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid #c9b98c; font-size: 14px; color: #7a6540; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="crumb"><a href="/">BardBits</a> &rsaquo; About</p>
+
+      <h1>About</h1>
+
+      <p class="lead">
+        BardBits is a growing set of small web projects. Each one is meant to be
+        genuinely useful on its own — the point is the thing itself, not a
+        demonstration of anything.
+      </p>
+
+      <p>
+        This page is for anyone curious about how it is put together. If you came
+        here to name a cottage, you can safely ignore all of it.
+      </p>
+
+      <h2>Written with Claude Code</h2>
+      <p>
+        Every line of this site — the generators, the infrastructure, the deploy
+        pipeline, the privacy policy — was written in collaboration with
+        <a href="https://claude.com/claude-code">Claude Code</a>, working against
+        a real AWS account rather than a sandbox. That is worth stating plainly
+        because it is unusual today and will not be for long.
+      </p>
+      <p>
+        It was not a matter of asking for a website and accepting what appeared.
+        The interesting parts came from disagreement: an OIDC trust policy that
+        silently matched nothing until the real token claim was read out of
+        CloudTrail, a deploy that pruned old files before uploading the new ones
+        and briefly served pages whose stylesheet had already been deleted, a
+        CloudFormation property that nests in the API and flattens in the
+        template. Those were found by checking rather than by assuming, and the
+        fixes are in the history.
+      </p>
+
+      <h2>How it runs</h2>
+      <p>
+        Static files in a private S3 bucket, served through CloudFront. No
+        servers, no database, no backend. Every project lives under its own key
+        prefix in one bucket behind one distribution, so adding a project costs
+        nothing in infrastructure.
+      </p>
+      <ul>
+        <li>
+          <strong>Defined as code.</strong> The bucket, the CDN, DNS, TLS, the
+          edge routing and the logging are all CloudFormation. Nothing was
+          clicked into existence in a console.
+        </li>
+        <li>
+          <strong>Deployed by pushing.</strong> A merge to <code>main</code>
+          builds and publishes the site. No AWS credential is stored anywhere:
+          GitHub proves its identity per run through OIDC federation and receives
+          keys that expire within the hour. The account holds no access keys at
+          all.
+        </li>
+        <li>
+          <strong>Prerendered.</strong> Pages arrive as real HTML with the
+          content already in them, then hydrate. Search engines and people with
+          JavaScript disabled see the same thing.
+        </li>
+        <li>
+          <strong>One function at the edge</strong> handles the canonical
+          hostname, redirects from URLs the site used to use, and directory
+          indexes — because a CloudFront behaviour permits exactly one.
+        </li>
+      </ul>
+
+      <h2>What it deliberately does not do</h2>
+      <p>
+        There is no analytics, no advertising network, no third-party script of
+        any kind, and no cookie set by this site. A Content-Security-Policy
+        enforces that in the browser rather than leaving it to good intentions.
+      </p>
+      <p>
+        Server logs record which pages are requested and what fails, and the
+        visitor's IP address is deliberately not among the fields collected. That
+        cost something — it makes some questions unanswerable — and it was still
+        the right trade for a site that has no need to know who anyone is. The
+        <a href="/privacy/">privacy policy</a> describes exactly what is kept and
+        for how long, and every claim in it was checked against the running site
+        rather than asserted.
+      </p>
+
+      <h2>The source</h2>
+      <p>
+        All of it is public at
+        <a href="https://github.com/BardBits/BardBits">github.com/BardBits/BardBits</a>,
+        including the parts that are unflattering. The commit messages explain
+        why things are the way they are, which is usually the part that goes
+        missing.
+      </p>
+
+      <footer>
+        <a href="/">&larr; All BardBits projects</a> &middot; <a href="/privacy/">Privacy</a>
+      </footer>
+    </main>
+  </body>
+</html>
