@@ -1,8 +1,8 @@
 # BardBits
 
-Small tools, carefully made — [bardbits.ca](https://bardbits.ca)
+[bardbits.ca](https://bardbits.ca)
 
-A monorepo of static web projects sharing one AWS deployment. Everything is
+A monorepo of web projects sharing one AWS deployment. Everything is currently
 prerendered HTML on S3 behind CloudFront: no servers, no backend, pennies a
 month.
 
