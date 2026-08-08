@@ -101,6 +101,10 @@ cfn-lint infra/site.yaml
 aws cloudformation deploy --template-file infra/github-oidc.yaml --stack-name github-oidc --capabilities CAPABILITY_NAMED_IAM --region ca-central-1
 ```
 
+`GitHubOrg` defaults to the account that owns this repository. It is the value
+to change first if that account is ever renamed: the OIDC `sub` claim carries
+the current login, so a rename breaks deploys until this stack is redeployed.
+
 **This one needs `DJS_Admin`, not `agent-toolkit`.** Creating an OIDC provider is
 an `iam:*` action, and `agent-toolkit` is deliberately blocked from those — the
 guardrail working as intended, not a misconfiguration. Sign in as `DJS_Admin`

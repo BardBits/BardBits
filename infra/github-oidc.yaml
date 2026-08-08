@@ -9,7 +9,10 @@ Parameters:
   GitHubOrg:
     Type: String
     Default: BardBits
-    Description: GitHub account that owns the repository.
+    Description: >
+      GitHub account that owns the repository. Must match the account's current
+      login: the sub claim carries the name as well as the numeric id, so a
+      rename means updating this and redeploying the stack.
 
   RepositoryName:
     Type: String
@@ -89,8 +92,13 @@ Resources:
               # never matches and every deploy fails with AccessDenied.
               #
               # That is a security improvement, not just a quirk. Names can be
-              # renamed and reclaimed; ids cannot. Whoever later registers the
-              # login "BardBits" gets a different id and cannot assume this role.
+              # renamed and reclaimed; ids cannot. Whoever later registers this
+              # account's login gets a different id and cannot assume this role.
+              #
+              # The trap is the reverse case: the sub carries the CURRENT login,
+              # so renaming the account breaks every deploy with AccessDenied
+              # until GitHubOrg is updated and this stack is redeployed. The
+              # numeric ids do not change and do not save you.
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
                 token.actions.githubusercontent.com:sub: !Sub "repo:${GitHubOrg}@${GitHubOrgId}/${RepositoryName}@${RepositoryId}:ref:refs/heads/${BranchName}"
