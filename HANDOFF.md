@@ -1,0 +1,141 @@
+# Handoff
+
+For a session starting with no context. Everything here is something you cannot
+work out from the code, the commit history, or `CLAUDE.md` — mostly decisions,
+their reasons, and state that lives outside the repository.
+
+**This is the technical half.** Commercial positioning — what the site is for,
+what it is allowed to say, and why — lives in `NOTES.md`, which is deliberately
+untracked because this repository is public. If you are making copy, layout or
+product decisions and `NOTES.md` is not in your working directory, ask the
+operator for it rather than inferring the strategy from the site.
+
+## State that is not in this repository
+
+These will not show up in a `git status`, and are easy to break by accident:
+
+- **Branch protection on `main`** — configured through the GitHub API, not a
+  file. Requires a PR, requires the `build` check, requires the branch to be up
+  to date with `main`, applies to admins, blocks force-pushes and deletions.
+  A push straight to `main` will be rejected; that is intended.
+- **The `AWS_DEPLOY_ROLE` repository variable** — the deploy workflow reads it.
+  If it is missing, deploys fail at the credentials step.
+- **The SPF record** is *deliberately* not in CloudFormation. The apex `TXT`
+  record already existed holding the Search Console verification token, and
+  CloudFormation cannot adopt a record it did not create, so `v=spf1 -all` was
+  added alongside that value by hand. Consolidating means briefly deleting the
+  verification record. Known drift, accepted.
+- **Two git worktrees.** `BardBits` owns infrastructure, deploy tooling, CI,
+  `site-root` and the generators hub. `BardBits-retreat-names` owns the three
+  generators and anything belonging to them. Edit only in the worktree that owns
+  what you are changing. They exist because two concurrent sessions kept finding
+  each other's uncommitted files in a shared directory.
+- **Search Console and Bing** each hold a single *Domain* property for the
+  domain. Do not add per-page properties (see dead ends).
+
+## What remains
+
+1. **Decide whether the generator pages get an `About` footer link.** Every
+   other page has one; those three do not, because `/about/` shipped after their
+   footer was written. Arguably correct as-is — "how this is built" is the least
+   useful link on those pages — but it should be a decision rather than drift.
+   Belongs to the retreat-names worktree.
+2. **The affiliate module stays unshipped**, and the reason is commercial rather
+   than technical. See `NOTES.md`. The code exists on
+   `feat/retreat-names-affiliate` with placeholder hrefs and must not merge as
+   it stands: going live needs real deep links, the sub-ID parameter renamed to
+   whatever the network uses, and — per `CLAUDE.md` — `/privacy` updated in the
+   same pull request, which lives in `site-root` rather than that worktree.
+3. **Revisit multi-account / IAM Identity Center** if a project ever holds real
+   user data. Not before that.
+
+## Decisions a fresh session would plausibly redo wrong
+
+- **There is no tagline on the landing page, on purpose.** Do not invent a
+  replacement; the reasoning is in `NOTES.md`.
+- **One privacy policy for the whole domain, not one per project.** Browser
+  storage is origin-scoped and there is a single operator, so a per-project
+  boundary would not be a real one.
+- **The About page is footer-linked only,** not given a card on the landing
+  page. That is a positioning decision, not an oversight — see `NOTES.md`.
+- **Access logs deliberately omit the visitor IP address** (and cookies). It
+  makes some questions unanswerable and that trade was made knowingly. The
+  privacy policy states it as a fact, so adding the field would make the
+  published policy false.
+- **The Content-Security-Policy blocks all third-party content.** This will
+  break affiliate widgets, externally hosted product images, tracking pixels and
+  embedded iframes — plain `<a>` links are fine. That is the intended behaviour,
+  not an oversight. If an exception is genuinely needed, widen to the specific
+  merchant domain rather than `*`, and change `scripts/serve-site.mjs` to match
+  so local preview keeps catching violations.
+- **`style-src` allows `'unsafe-inline'`.** A real weakening, accepted
+  knowingly: the static pages use inline `<style>` and the app sets CSS custom
+  properties through React `style` attributes. Removing it needs per-build
+  hashes and a refactor for little gain on a site with no user input.
+- **`form-action 'none'` blocks every form submission, including same-origin.**
+  Any future form — email capture, search — needs this loosened first.
+- **The privacy contact address is `bardbits.ca+privacy@gmail.com`,** which is
+  plus-addressing on the `bardbits.ca@gmail.com` mailbox. Delivery has been
+  tested. It is a real inbox rather than a placeholder, so do not "fix" it to
+  something tidier — it is published on `/privacy` as the route for exercising
+  data rights.
+- **The S3 bucket name does not match the domain, and that is fine.** Bucket
+  names are globally unique and cannot be changed, so renaming means a new
+  bucket, an object copy, a CloudFront origin change and new resource ARNs in
+  the deploy role. The bucket is private and no visitor ever sees its name.
+  Judged not worth the downtime — decided, not missed.
+
+## Dead ends — already tried, do not repeat
+
+- **Do not nest `ExpiredObjectDeleteMarker` under `Expiration`** in
+  CloudFormation. That is the raw S3 API shape, and S3 reports it back that way,
+  which makes the wrong form look correct. CloudFormation flattens it onto the
+  rule. `cfn-lint` catches this; run it.
+- **Do not write the OIDC trust policy `sub` as `repo:<org>/<repo>:ref:...`.**
+  That is the shape in most guides and it matches nothing here. GitHub sends
+  immutable numeric ids: `repo:<org>@<orgId>/<repo>@<repoId>:ref:...`. If
+  deploys ever fail with `AccessDenied` on `sts:AssumeRoleWithWebIdentity`, read
+  the real claim out of CloudTrail rather than guessing at the format.
+- **Do not pass a bare `*` as a separate argument to the AWS CLI** from
+  PowerShell. On Linux it glob-expands against the working directory before the
+  CLI sees it, so `--exclude "*"` arrives as a list of repo files. Windows does
+  not do this, so it only appears on the CI runner. Use `--option=value`.
+- **Do not prune assets in the same pass that uploads them.** Deleting what the
+  currently live HTML still references, before the replacement HTML is up, took
+  the site down once — pages served with their CSS and JS returning 403. Uploads
+  are additive and pruning runs last for that reason.
+- **Do not use legacy CloudFront S3 logging.** It requires a bucket with ACLs
+  enabled, which contradicts the `BucketOwnerEnforced` setting the log bucket
+  uses. Standard logging v2 is already configured.
+- **Do not put logs in the site bucket, even under a prefix.** Its policy lets
+  CloudFront read every key beneath it, so logs would be downloadable over the
+  CDN by anyone who guessed the path.
+- **Do not add per-page properties in Search Console or Bing.** Three were
+  briefly added for the generator URLs and removed. A property is an ownership
+  and reporting construct, not a way to get a page crawled; one per page just
+  fragments the data. Use URL Inspection inside the domain property instead.
+- **The Bing import from Search Console does work** with a Domain property. It
+  was predicted not to, and that prediction was wrong — it simply takes a few
+  minutes to populate. Do not skip it and set up manual verification.
+- **Do not make a status check required while GitHub Actions is degraded.** A
+  required check that cannot run makes every PR unmergeable, including the one
+  that would undo it.
+- **The smoke test list is meant to be exhaustive,** not a sample of the popular
+  pages. `/about/` and `/privacy/` were missing from it once, and a deploy that
+  broke either would have gone green.
+- **Memory does not follow a directory rename or a new worktree.** It is keyed
+  by path. Moving or adding a working directory means copying the memory
+  directory across, or the next session starts blind.
+
+### Tooling traps on this machine
+
+- `git commit -m` with a PowerShell here-string containing double quotes gets
+  mangled and git reads fragments as pathspecs. Write the message to a file and
+  use `git commit -F`.
+- `Get-Content` defaults to ANSI, so UTF-8 files read back as mojibake and
+  produce false diffs. Use `[System.IO.File]::ReadAllText` with UTF-8 when
+  comparing.
+- `Resolve-DnsName` and `nslookup` cannot query `CAA` records and will report
+  them as absent. Use Google's DNS-over-HTTPS endpoint instead.
+- A message pasted into another Claude Code session must not begin with `/` —
+  it is parsed as a slash command.
