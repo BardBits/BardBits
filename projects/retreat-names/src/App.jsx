@@ -137,6 +137,15 @@ export default function App({ themeId }) {
             </div>
           </div>
         )}
+
+        {/* These pages had no footer at all, so the privacy policy was
+            unreachable from them. Matches the pattern on the hub and the
+            site root. */}
+        <footer className="footer">
+          <a href={BASE}>&larr; All name generators</a>
+          <span aria-hidden="true"> &middot; </span>
+          <a href="/privacy/">Privacy</a>
+        </footer>
       </div>
     </div>
   );
