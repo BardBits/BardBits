@@ -70,10 +70,15 @@ jobs:
 
       # Proves the deploy actually reached the live domain rather than just
       # exiting zero. Fails the run if any page stops returning 200.
+      #
+      # Every page site-root publishes belongs in this list, not just the ones
+      # with traffic. /about/ and /privacy/ were missing, so a deploy that broke
+      # either would have gone green - and /privacy/ is the page whose absence
+      # matters most, being the one the policy itself promises is there.
       - name: Smoke test the live site
         run: |
           set -e
-          for path in / /name-generators/ /name-generators/cottage/ /name-generators/cabin/ /name-generators/beach/ /sitemap.xml /robots.txt; do
+          for path in / /about/ /privacy/ /name-generators/ /name-generators/cottage/ /name-generators/cabin/ /name-generators/beach/ /sitemap.xml /robots.txt; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 5 "https://bardbits.ca${path}")
             echo "${code}  ${path}"
             [ "$code" = "200" ] || exit 1
