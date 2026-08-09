@@ -200,6 +200,76 @@ body {
   color: var(--text);
 }
 
+/* ── Affiliate offer ────────────────────────── */
+/* Sits on the page background rather than in a boxed card. A panel with its
+   own border reads as an ad slot; this should read as the next step. */
+.offer {
+  width: 100%;
+  max-width: 540px;
+  margin-bottom: 32px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.offer-heading {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: .3px;
+  color: var(--text);
+}
+
+.offer-blurb {
+  max-width: 430px;
+  margin: 0 auto 22px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--sub);
+}
+
+.offer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  align-items: center;
+  justify-content: center;
+}
+
+.offer-link {
+  font-size: 15px;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color .2s ease, color .2s ease;
+}
+
+.offer-link::after { content: " \2192"; }
+
+.offer-link:hover { border-bottom-color: var(--accent); }
+.offer-link:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+.offer-link-primary { font-weight: 600; }
+
+/* Rakuten's policy dictates this styling, so resist tidying it into a quiet
+   footnote. It must be conspicuous: coloured rather than grey, LARGER than the
+   surrounding copy (which is 15px), on a contrasting background, and reachable
+   without further action — hence its position above the links.
+   https://rakutenadvertising.com/legal-notices/affiliate-network-policies/ */
+.offer-disclosure {
+  max-width: 460px;
+  margin: 0 auto 24px;
+  padding: 12px 18px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.offer-disclosure-label { font-weight: 700; }
+
 /* ── History ────────────────────────────────── */
 .history { width: 100%; }
 

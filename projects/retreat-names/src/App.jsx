@@ -5,6 +5,7 @@ import { pageBgs, palettes, cssVars } from "./theme.js";
 import { generateName, featuredName } from "./engine.js";
 import { ROUTES, BASE, pathFor } from "./routes.js";
 import { loadHistory, saveHistory, HISTORY_LIMIT } from "./history.js";
+import AffiliateOffer from "./components/AffiliateOffer.jsx";
 
 export default function App({ themeId }) {
   const config = CONFIGS[themeId];
@@ -121,6 +122,8 @@ export default function App({ themeId }) {
         </div>
 
         <p className="description">{config.description}</p>
+
+        <AffiliateOffer themeId={themeId} />
 
         <div className="stat">
           <span className="stat-label">Possible Names</span>
