@@ -160,6 +160,14 @@ These will not show up in a `git status`, and are easy to break by accident:
   mismatch makes fixed-string matching against a checked-out tree find nothing
   while reporting success — the more dangerous shape, because it is
   indistinguishable from a clean no-op.
+- **An untracked `HANDOFF.md` in a worktree is not automatically stale.** A
+  branch cut before this file was tracked leaves an untracked copy behind, and
+  updating from `main` then aborts with *"untracked working tree file would be
+  overwritten by merge"*. Deleting it clears the block, so that is the tempting
+  instruction — but diff it first (`git show origin/main:HANDOFF.md`, with
+  `--strip-trailing-cr` per the trap above) and confirm it is strictly older
+  before removing it. The expensive case is a copy holding notes that were
+  never committed, and it looks identical to the harmless one until you check.
 - `Resolve-DnsName` and `nslookup` cannot query `CAA` records and will report
   them as absent. Use Google's DNS-over-HTTPS endpoint instead.
 - A message pasted into another Claude Code session must not begin with `/` —
