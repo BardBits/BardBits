@@ -158,21 +158,33 @@ These will not show up in a `git status`, and are easy to break by accident:
   between a worktree file and the output of `git show` reports every line as
   changed and buries the real hunks. Use `diff -u --strip-trailing-cr`, which is
   a **GNU diff** flag — `git diff` rejects it and spells it `--ignore-cr-at-eol`.
-  Easier still, `git diff --no-index` normalises for you and needs no flag. The
-  same mismatch makes fixed-string matching against a checked-out tree find
-  nothing while reporting success — the more dangerous shape, because it is
-  indistinguishable from a clean no-op.
+  `git diff --no-index` also hides the mismatch, but only because
+  `core.autocrlf` is `true` here: set it to `false` and the same comparison
+  reports 375 changed lines on identical content. Prefer GNU diff, which depends
+  on no git config. The same mismatch makes fixed-string matching against a
+  checked-out tree find nothing while reporting success — the more dangerous
+  shape, because it is indistinguishable from a clean no-op.
+- **`git` cannot read process substitution on this machine; GNU tools can.**
+  `git diff --no-index file <(git show rev:path)` fails with
+  `error: Could not access '/proc/<pid>/fd/63'` and produces no diff at all,
+  because Git for Windows cannot open the `/proc` path Git Bash hands it. Plain
+  `diff -u <(...)` works fine. Write the blob to a real temp file before handing
+  it to any `git` subcommand.
 - **An untracked `HANDOFF.md` in a worktree is not automatically stale.** A
   branch cut before this file was tracked leaves an untracked copy behind, and
   updating from `main` then aborts with *"untracked working tree file would be
   overwritten by merge"*. Deleting it clears the block, so that is the tempting
   instruction — but diff it first and confirm it is strictly older before
   removing it. The expensive case is a copy holding notes that were never
-  committed, and it looks identical to the harmless one until you check. Use
-  `git diff --no-index HANDOFF.md <(git show origin/main:HANDOFF.md)`: the
-  untracked copy is CRLF and `git show` emits LF, so plain `diff -u` calls every
-  line changed — measured at 351 lines of noise for byte-identical content —
-  while `--no-index` normalises and reports nothing.
+  committed, and it looks identical to the harmless one until you check. The
+  untracked copy is CRLF and `git show` emits LF, so an unnormalised comparison
+  calls every line changed — 351 lines of noise on byte-identical content. Two
+  steps, depending on nothing but GNU diff:
+
+  ```bash
+  git show origin/main:HANDOFF.md > /tmp/handoff-main.md
+  diff -u --strip-trailing-cr /tmp/handoff-main.md HANDOFF.md
+  ```
 - **Update a feature branch from `main` before working it, for `HANDOFF.md`'s
   sake rather than the code's.** Checking out a branch cut before a decision was
   recorded restores the older file, so the branch hands whoever picks it up a
