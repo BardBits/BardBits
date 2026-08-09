@@ -156,18 +156,29 @@ These will not show up in a `git status`, and are easy to break by accident:
 - **Normalise line endings before comparing repository content to anything.**
   Working-tree files here are CRLF and git's stored blobs are LF, so `diff -u`
   between a worktree file and the output of `git show` reports every line as
-  changed and buries the real hunks. Use `diff -u --strip-trailing-cr`. The same
-  mismatch makes fixed-string matching against a checked-out tree find nothing
-  while reporting success — the more dangerous shape, because it is
+  changed and buries the real hunks. Use `diff -u --strip-trailing-cr`, which is
+  a **GNU diff** flag — `git diff` rejects it and spells it `--ignore-cr-at-eol`.
+  Easier still, `git diff --no-index` normalises for you and needs no flag. The
+  same mismatch makes fixed-string matching against a checked-out tree find
+  nothing while reporting success — the more dangerous shape, because it is
   indistinguishable from a clean no-op.
 - **An untracked `HANDOFF.md` in a worktree is not automatically stale.** A
   branch cut before this file was tracked leaves an untracked copy behind, and
   updating from `main` then aborts with *"untracked working tree file would be
   overwritten by merge"*. Deleting it clears the block, so that is the tempting
-  instruction — but diff it first (`git show origin/main:HANDOFF.md`, with
-  `--strip-trailing-cr` per the trap above) and confirm it is strictly older
-  before removing it. The expensive case is a copy holding notes that were
-  never committed, and it looks identical to the harmless one until you check.
+  instruction — but diff it first and confirm it is strictly older before
+  removing it. The expensive case is a copy holding notes that were never
+  committed, and it looks identical to the harmless one until you check. Use
+  `git diff --no-index HANDOFF.md <(git show origin/main:HANDOFF.md)`: the
+  untracked copy is CRLF and `git show` emits LF, so plain `diff -u` calls every
+  line changed — measured at 351 lines of noise for byte-identical content —
+  while `--no-index` normalises and reports nothing.
+- **Update a feature branch from `main` before working it, for `HANDOFF.md`'s
+  sake rather than the code's.** Checking out a branch cut before a decision was
+  recorded restores the older file, so the branch hands whoever picks it up a
+  map that still lists settled questions as open — and invites exactly the
+  rework the entry was written to prevent. Being behind on this file is not
+  cosmetic the way being behind on source is.
 - `Resolve-DnsName` and `nslookup` cannot query `CAA` records and will report
   them as absent. Use Google's DNS-over-HTTPS endpoint instead.
 - A message pasted into another Claude Code session must not begin with `/` —
