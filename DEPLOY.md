@@ -73,10 +73,16 @@ aws sts get-caller-identity
 ### 2. Create the infrastructure
 
 Bucket names are globally unique across all of AWS. This account uses an
-account-ID suffix to guarantee that:
+account-ID suffix to guarantee that.
+
+The name itself is **not written down in this repository**. It predates the
+domain and has nothing to do with what the site is called, and a name left in
+the source invites someone to tidy the mismatch — which for a bucket is a
+migration, not an edit. It lives in the `SITE_BUCKET` repository variable, and
+`gh variable get SITE_BUCKET` will tell you what it is:
 
 ```bash
-aws cloudformation deploy --template-file infra/site.yaml --stack-name portfolio-site --parameter-overrides BucketName=darou-portfolio-657918590662 --region ca-central-1
+aws cloudformation deploy --template-file infra/site.yaml --stack-name portfolio-site --parameter-overrides BucketName=<site-bucket> --region ca-central-1
 ```
 
 This creates the bucket, the CloudFront distribution, and an Origin Access
@@ -98,12 +104,29 @@ cfn-lint infra/site.yaml
 ### 3. Let GitHub Actions deploy
 
 ```bash
-aws cloudformation deploy --template-file infra/github-oidc.yaml --stack-name github-oidc --capabilities CAPABILITY_NAMED_IAM --region ca-central-1
+aws cloudformation deploy --template-file infra/github-oidc.yaml --stack-name github-oidc --parameter-overrides BucketName=<site-bucket> --capabilities CAPABILITY_NAMED_IAM --region ca-central-1
 ```
 
 `GitHubOrg` defaults to the account that owns this repository. It is the value
 to change first if that account is ever renamed: the OIDC `sub` claim carries
 the current login, so a rename breaks deploys until this stack is redeployed.
+
+**Editing a default in the template is not enough to change a live stack.**
+`aws cloudformation deploy` reuses the parameter values already stored on the
+stack for anything not named in `--parameter-overrides`; template defaults only
+apply when a parameter is genuinely new. So a redeploy after a rename reports
+"No changes to deploy" while the trust policy still carries the old value, which
+looks like success and fixes nothing. Name the changed parameters explicitly:
+
+```bash
+aws cloudformation deploy --template-file infra/github-oidc.yaml --stack-name github-oidc --parameter-overrides GitHubOrg=<account> RepositoryId=<repo-id> BucketName=<site-bucket> --capabilities CAPABILITY_NAMED_IAM --region ca-central-1
+```
+
+Then confirm what actually landed, rather than trusting the stack event:
+
+```bash
+aws iam get-role --role-name BardBits-github-deploy --query 'Role.AssumeRolePolicyDocument.Statement[0].Condition.StringEquals' --output json
+```
 
 **This one needs `DJS_Admin`, not `agent-toolkit`.** Creating an OIDC provider is
 an `iam:*` action, and `agent-toolkit` is deliberately blocked from those — the
@@ -169,7 +192,7 @@ script itself, or recovering from a half-finished CI run. Requires `aws login`
 as described above.
 
 ```bash
-./scripts/deploy-project.ps1 -Project retreat-names -Bucket darou-portfolio-657918590662 -DistributionId E3RJMPASAQD8EC
+./scripts/deploy-project.ps1 -Project retreat-names -Bucket <site-bucket> -DistributionId E3RJMPASAQD8EC
 ```
 
 Valid names are the `name` fields in `projects.json`. The script builds the
@@ -323,7 +346,7 @@ order leaves the certificate stack pending until it eventually times out.
    distribution keeps serving its `cloudfront.net` URL.
 
    ```bash
-   aws cloudformation deploy --template-file infra/site.yaml --stack-name portfolio-site --parameter-overrides BucketName=darou-portfolio-657918590662 --region ca-central-1
+   aws cloudformation deploy --template-file infra/site.yaml --stack-name portfolio-site --parameter-overrides BucketName=<site-bucket> --region ca-central-1
    ```
 
 2. Read the nameservers and set them on `bardbits.ca` at GoDaddy. Wait for them
@@ -363,11 +386,11 @@ To remove the bucket as well, do it explicitly afterwards. Versioning is on, so
 `rm --recursive` alone won't empty it; `rb --force` handles versions too:
 
 ```bash
-aws s3 rb s3://darou-portfolio-657918590662 --force
+aws s3 rb s3://<site-bucket> --force
 ```
 
 To remove just one project and leave its siblings alone:
 
 ```bash
-aws s3 rm s3://darou-portfolio-657918590662/name-generators/ --recursive
+aws s3 rm s3://<site-bucket>/name-generators/ --recursive
 ```
