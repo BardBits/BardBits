@@ -39,18 +39,13 @@ These will not show up in a `git status`, and are easy to break by accident:
 
 ## What remains
 
-1. **Decide whether the generator pages get an `About` footer link.** Every
-   other page has one; those three do not, because `/about/` shipped after their
-   footer was written. Arguably correct as-is — "how this is built" is the least
-   useful link on those pages — but it should be a decision rather than drift.
-   Belongs to the retreat-names worktree.
-2. **The affiliate module stays unshipped**, and the reason is commercial rather
+1. **The affiliate module stays unshipped**, and the reason is commercial rather
    than technical. See `NOTES.md`. The code exists on
    `feat/retreat-names-affiliate` with placeholder hrefs and must not merge as
    it stands: going live needs real deep links, the sub-ID parameter renamed to
    whatever the network uses, and — per `CLAUDE.md` — `/privacy` updated in the
    same pull request, which lives in `site-root` rather than that worktree.
-3. **Revisit multi-account / IAM Identity Center** if a project ever holds real
+2. **Revisit multi-account / IAM Identity Center** if a project ever holds real
    user data. Not before that.
 
 ## Decisions a fresh session would plausibly redo wrong
@@ -62,6 +57,17 @@ These will not show up in a `git status`, and are easy to break by accident:
   boundary would not be a real one.
 - **The About page is footer-linked only,** not given a card on the landing
   page. That is a positioning decision, not an oversight — see `NOTES.md`.
+- **The three generator pages deliberately omit that `About` footer link,** and
+  every other page carries it. The inconsistency is the decision, not drift, so
+  do not tidy it. About is linked from the pages that are *about the site* — the
+  root, the hub, `/privacy/` — and not from inside a project. `/about/` is a
+  build log, and it tells a visitor who came to name a cottage that they can
+  safely ignore it; the generator pages are the ones search actually lands on,
+  and their visitor's attention is worth more elsewhere. Commercial reasoning in
+  `NOTES.md`. If the affiliate module ever ships on these pages the case gets
+  stronger, not weaker. Revisit only if `/about/` is rewritten to serve visitors
+  rather than describe how the site is built, which would make it a different
+  page than the one this was decided against.
 - **Access logs deliberately omit the visitor IP address** (and cookies). It
   makes some questions unanswerable and that trade was made knowingly. The
   privacy policy states it as a fact, so adding the field would make the
@@ -141,10 +147,19 @@ These will not show up in a `git status`, and are easy to break by accident:
 
 - `git commit -m` with a PowerShell here-string containing double quotes gets
   mangled and git reads fragments as pathspecs. Write the message to a file and
-  use `git commit -F`.
+  use `git commit -F`. Note that `git merge -F` needs a real file — unlike
+  `commit`, it will not read `-` from stdin, and fails with
+  `could not read file '-'`.
 - `Get-Content` defaults to ANSI, so UTF-8 files read back as mojibake and
   produce false diffs. Use `[System.IO.File]::ReadAllText` with UTF-8 when
   comparing.
+- **Normalise line endings before comparing repository content to anything.**
+  Working-tree files here are CRLF and git's stored blobs are LF, so `diff -u`
+  between a worktree file and the output of `git show` reports every line as
+  changed and buries the real hunks. Use `diff -u --strip-trailing-cr`. The same
+  mismatch makes fixed-string matching against a checked-out tree find nothing
+  while reporting success — the more dangerous shape, because it is
+  indistinguishable from a clean no-op.
 - `Resolve-DnsName` and `nslookup` cannot query `CAA` records and will report
   them as absent. Use Google's DNS-over-HTTPS endpoint instead.
 - A message pasted into another Claude Code session must not begin with `/` —
