@@ -42,8 +42,11 @@ Parameters:
 
   BucketName:
     Type: String
-    Default: darou-portfolio-657918590662
-    Description: Site bucket the deploy role may write to.
+    Description: >
+      Site bucket the deploy role may write to. No default: the name predates
+      the domain and is kept out of the source, so pass it explicitly. It is
+      also held as the SITE_BUCKET repository variable, and is an output of the
+      portfolio-site stack.
 
   DistributionId:
     Type: String

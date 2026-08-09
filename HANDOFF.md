@@ -20,6 +20,10 @@ These will not show up in a `git status`, and are easy to break by accident:
   A push straight to `main` will be rejected; that is intended.
 - **The `AWS_DEPLOY_ROLE` repository variable** — the deploy workflow reads it.
   If it is missing, deploys fail at the credentials step.
+- **The `SITE_BUCKET` repository variable** — the bucket name is deliberately
+  not in the source. The deploy workflow reads it; if it is missing the sync
+  runs against an empty bucket name. `gh variable get SITE_BUCKET` retrieves it,
+  and the `portfolio-site` stack outputs it.
 - **The SPF record** is *deliberately* not in CloudFormation. The apex `TXT`
   record already existed holding the Search Console verification token, and
   CloudFormation cannot adopt a record it did not create, so `v=spf1 -all` was
@@ -79,11 +83,17 @@ These will not show up in a `git status`, and are easy to break by accident:
   tested. It is a real inbox rather than a placeholder, so do not "fix" it to
   something tidier — it is published on `/privacy` as the route for exercising
   data rights.
-- **The S3 bucket name does not match the domain, and that is fine.** Bucket
-  names are globally unique and cannot be changed, so renaming means a new
-  bucket, an object copy, a CloudFront origin change and new resource ARNs in
-  the deploy role. The bucket is private and no visitor ever sees its name.
-  Judged not worth the downtime — decided, not missed.
+- **The S3 bucket name does not match the domain, and is not in the source.**
+  It predates the domain. Bucket names are globally unique and cannot be
+  changed, so making it match means a new bucket, an object copy, a CloudFront
+  origin change and new resource ARNs in the deploy role — a migration, not an
+  edit, and not worth the downtime. Keeping the literal out of the repository
+  removes the temptation to tidy it. See `SITE_BUCKET` above.
+- **`aws cloudformation deploy` reuses a live stack's stored parameter values**
+  for anything not passed in `--parameter-overrides`. Editing a default in a
+  template therefore changes nothing on an existing stack, and the command
+  cheerfully reports "No changes to deploy" while the old value stays in place.
+  Name changed parameters explicitly and verify against the deployed resource.
 
 ## Dead ends — already tried, do not repeat
 

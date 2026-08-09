@@ -10,7 +10,7 @@
   command line would delete a sibling project's files.
 
 .EXAMPLE
-  ./scripts/deploy-project.ps1 -Project retreat-names -Bucket darou-portfolio-657918590662 -DistributionId E3RJMPASAQD8EC
+  ./scripts/deploy-project.ps1 -Project retreat-names -Bucket <site-bucket> -DistributionId E3RJMPASAQD8EC
 #>
 param(
   [Parameter(Mandatory = $true)]
