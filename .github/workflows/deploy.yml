@@ -84,7 +84,7 @@ jobs:
       - name: Smoke test the live site
         run: |
           set -e
-          for path in / /about/ /privacy/ /name-generators/ /name-generators/cottage/ /name-generators/cabin/ /name-generators/beach/ /sitemap.xml /robots.txt; do
+          for path in / /about/ /privacy/ /name-generators/ /name-generators/cottage/ /name-generators/cabin/ /name-generators/beach/ /reversi/ /sitemap.xml /robots.txt; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 5 "https://bardbits.ca${path}")
             echo "${code}  ${path}"
             [ "$code" = "200" ] || exit 1
