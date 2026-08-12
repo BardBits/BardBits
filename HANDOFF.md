@@ -137,9 +137,31 @@ These will not show up in a `git status`, and are easy to break by accident:
 - **Do not make a status check required while GitHub Actions is degraded.** A
   required check that cannot run makes every PR unmergeable, including the one
   that would undo it.
-- **The smoke test list is meant to be exhaustive,** not a sample of the popular
-  pages. `/about/` and `/privacy/` were missing from it once, and a deploy that
-  broke either would have gone green.
+- **The smoke test list is meant to be exhaustive over stable URLs,** not a
+  sample of the popular pages. `/about/` and `/privacy/` were missing from it
+  once, and a deploy that broke either would have gone green. It has since paid
+  for itself twice: `/reversi/` shipped 403ing behind a live landing-page card,
+  and the only reason that failed the build rather than sitting there was that
+  the URL was in this list.
+
+  Two limits worth knowing, because both look like gaps and only one is.
+
+  `/name-generators/favicon.svg` is listed even though it is an asset, because
+  four pages *outside* retreat-names link to it — the root, `/about/`,
+  `/privacy/` and the hub — while the file itself lives in retreat-names' source
+  and therefore inside its prune scope. Move it and the next retreat-names
+  deploy deletes a file four other pages depend on, in a prefix none of them
+  own. Listing the URL catches that wherever the file ends up living, which
+  relocating it would not.
+
+  Fingerprinted assets cannot be listed at all: their names change every build,
+  so any path written here is stale by the next deploy. That is a real blind
+  spot rather than an oversight — Reversi's `ai-worker-*.js` is referenced only
+  from inside the JS bundle, never from the HTML, so its absence would leave the
+  board dead on the first move without 404ing anything this list names. The only
+  check that covers it is loading the built page and using it, which is why the
+  post-deploy pass on a project with real behaviour should include playing with
+  it rather than fetching it.
 - **Every file the asset pass does not exclude is cached for a year as
   `immutable`, so either fingerprint its name or accept that its contents are
   frozen.** `scripts/deploy-project.ps1` stamps everything that is not `*.html`,
