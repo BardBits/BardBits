@@ -140,18 +140,28 @@ These will not show up in a `git status`, and are easy to break by accident:
 - **The smoke test list is meant to be exhaustive,** not a sample of the popular
   pages. `/about/` and `/privacy/` were missing from it once, and a deploy that
   broke either would have gone green.
-- **A project shipping its own `.js` or `.css` must fingerprint the filenames.**
-  The asset pass in `scripts/deploy-project.ps1` gives every file that is not
-  `*.html`, `*.xml` or `robots.txt` a one-year `immutable` cache. That is
-  correct for Vite output, whose names change with the bytes, and the comment
-  there says so — but nothing enforces it. Ship an unfingerprinted `game.js` and
-  returning visitors hold it for a year; a CloudFront invalidation clears the
-  edge, not their browsers, so a fix reaches only people who never visited.
-  `workspace: null` is therefore safe only for a project whose CSS is inline and
-  which has no scripts at all, which is why `site-root` and
-  `name-generators-hub` get away with it. Anything with real assets needs a
-  build. The failure is delayed and easy to misattribute: the page works, and
-  only the fix fails to arrive.
+- **Every file the asset pass does not exclude is cached for a year as
+  `immutable`, so either fingerprint its name or accept that its contents are
+  frozen.** `scripts/deploy-project.ps1` stamps everything that is not `*.html`,
+  `*.xml` or `robots.txt`. The criterion is a *stable filename*, not an
+  extension: a `logo.png`, a web font or a favicon is caught exactly as a
+  `game.js` is. A CloudFront invalidation does not rescue it — that clears the
+  edge, while `immutable` tells the browser not to revalidate at all, so a
+  replacement reaches only people who never held the old one. The failure is
+  delayed and easy to misattribute: the page works, and only the fix fails to
+  arrive.
+
+  Scripts and stylesheets are where it does functional damage, so a project
+  shipping them needs a build that fingerprints. Vite does; nothing enforces it.
+  `workspace: null` is safe only for a project whose CSS is inline and which has
+  no scripts — `site-root` and `name-generators-hub` qualify today because they
+  ship no non-HTML files whatsoever, not because they have no build.
+
+  Known and accepted: `retreat-names` ships `public/favicon.svg` and
+  `public/og-preview.png` unfingerprinted. Replacing either means a year before
+  returning visitors see the change — and note the favicon is the one *every*
+  page on the domain links to, so that one is site-wide rather than the
+  generators' own.
 - **Memory does not follow a directory rename or a new worktree.** It is keyed
   by path. Moving or adding a working directory means copying the memory
   directory across, or the next session starts blind.
