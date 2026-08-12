@@ -13,8 +13,14 @@
   ./scripts/deploy-project.ps1 -Project retreat-names -Bucket <site-bucket> -DistributionId E3RJMPASAQD8EC
 #>
 param(
+  # Deliberately no ValidateSet. One used to list the project names here, which
+  # made this a third place a new project had to be registered - after
+  # projects.json and deploy.yml - and the only one that was not obvious from
+  # any of the others. It also fired before the manifest lookup below, so a
+  # project that was correctly declared and correctly deployed still failed here
+  # with an error about a set nobody knew existed. The lookup rejects an unknown
+  # name on its own, using the manifest as the single source of truth.
   [Parameter(Mandatory = $true)]
-  [ValidateSet("site-root", "name-generators-hub", "retreat-names")]
   [string]$Project,
 
   [Parameter(Mandatory = $true)][string]$Bucket,
