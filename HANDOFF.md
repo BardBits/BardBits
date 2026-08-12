@@ -159,9 +159,10 @@ These will not show up in a `git status`, and are easy to break by accident:
 
   Known and accepted: `retreat-names` ships `public/favicon.svg` and
   `public/og-preview.png` unfingerprinted. Replacing either means a year before
-  returning visitors see the change — and note the favicon is the one *every*
-  page on the domain links to, so that one is site-wide rather than the
-  generators' own.
+  returning visitors see the change — and note that four pages outside that
+  project link to the favicon: the root, `/about/`, `/privacy/` and the hub. Its
+  blast radius is wider than the generators, though not the whole site: Reversi
+  ships its own `/reversi/favicon.svg` and does not depend on it.
 - **Memory does not follow a directory rename or a new worktree.** It is keyed
   by path. Moving or adding a working directory means copying the memory
   directory across, or the next session starts blind.
