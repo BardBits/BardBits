@@ -42,6 +42,14 @@ jobs:
       - name: Build all projects
         run: npm run build
 
+      # A test suite that cannot fail a pull request is decoration: it rots, and
+      # nobody notices until it is wrong rather than merely unrun. --if-present
+      # is load-bearing rather than defensive - most projects here have no test
+      # script and never will, and without it this step fails on every one of
+      # them. Runs after the build so a future project may test its built output.
+      - name: Run project tests
+        run: npm run test --workspaces --if-present
+
       # The templates are only otherwise linted by hand, and both times a
       # property shape was wrong this session, cfn-lint was what caught it -
       # CloudFormation flattens some properties the underlying API nests.
