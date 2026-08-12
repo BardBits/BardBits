@@ -57,17 +57,18 @@ These will not show up in a `git status`, and are easy to break by accident:
   boundary would not be a real one.
 - **The About page is footer-linked only,** not given a card on the landing
   page. That is a positioning decision, not an oversight — see `NOTES.md`.
-- **The three generator pages deliberately omit that `About` footer link,** and
-  every other page carries it. The inconsistency is the decision, not drift, so
-  do not tidy it. About is linked from the pages that are *about the site* — the
-  root, the hub, `/privacy/` — and not from inside a project. `/about/` is a
-  build log, and it tells a visitor who came to name a cottage that they can
-  safely ignore it; the generator pages are the ones search actually lands on,
-  and their visitor's attention is worth more elsewhere. Commercial reasoning in
-  `NOTES.md`. If the affiliate module ever ships on these pages the case gets
-  stronger, not weaker. Revisit only if `/about/` is rewritten to serve visitors
-  rather than describe how the site is built, which would make it a different
-  page than the one this was decided against.
+- **Pages inside a project deliberately omit that `About` footer link,** while
+  every page that is *about the site* carries it — the root, the hub,
+  `/privacy/`. This is a rule, not a list: a new project follows it rather than
+  being added to an enumeration, and the inconsistency it creates is the
+  decision, not drift, so do not tidy it. `/about/` is a build log, and it tells
+  a visitor who came to name a cottage or play a game that they can safely
+  ignore it; project pages are the ones search actually lands on, and their
+  visitor's attention is worth more elsewhere. Commercial reasoning in
+  `NOTES.md`. If the affiliate module ever ships the case gets stronger, not
+  weaker. Revisit only if `/about/` is rewritten to serve visitors rather than
+  describe how the site is built, which would make it a different page than the
+  one this was decided against.
 - **Access logs deliberately omit the visitor IP address** (and cookies). It
   makes some questions unanswerable and that trade was made knowingly. The
   privacy policy states it as a fact, so adding the field would make the
