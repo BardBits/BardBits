@@ -44,6 +44,16 @@
       "protectRootIndex": true,
       "pages": [],
       "sitemap": true
+    },
+    {
+      "name": "reversi",
+      "source": "projects/reversi/dist",
+      "prefix": "reversi",
+      "workspace": "projects/reversi",
+      "prune": true,
+      "protectRootIndex": false,
+      "pages": ["/reversi/"],
+      "sitemap": false
     }
   ]
 }

@@ -13,10 +13,17 @@ month.
 | `projects/site-root` | [bardbits.ca](https://bardbits.ca) — landing page |
 | `projects/name-generators-hub` | [/name-generators/](https://bardbits.ca/name-generators/) — generator index |
 | `projects/retreat-names` | [/cottage/](https://bardbits.ca/name-generators/cottage/) · [/cabin/](https://bardbits.ca/name-generators/cabin/) · [/beach/](https://bardbits.ca/name-generators/beach/) |
+| `projects/reversi` | [/reversi/](https://bardbits.ca/reversi/) — the board game, against a computer opponent |
 
 `retreat-names` is a single React app serving three themes that share a design
 and a history store. A generator with a different look would be its own project
 rather than a fourth theme here.
+
+`reversi` is one page of plain ES modules with no framework, built by Vite for
+the asset fingerprinting rather than for a component model. The rules and the
+search opponent are separate modules with no DOM access, which is what lets
+them be tested from Node; the search itself runs in a Web Worker so a long
+think never blocks the board.
 
 ## Getting started
 
@@ -25,6 +32,7 @@ npm install
 npm run dev     # the app alone, with hot reload
 npm run build   # all projects, prerendered
 npm run site    # every project staged into one tree, served as the bucket holds it
+npm test --workspaces --if-present   # every suite a project defines
 ```
 
 `npm run site` is the one worth knowing about. Each project builds in isolation,

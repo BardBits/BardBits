@@ -72,7 +72,7 @@
       <p class="crumb"><a href="/">BardBits</a> &rsaquo; Privacy Policy</p>
 
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated 8 August 2026</p>
+      <p class="updated">Last updated 11 August 2026</p>
 
       <p class="lead">
         BardBits does not ask who you are. There are no accounts, no sign-ups, no
@@ -104,19 +104,55 @@
 
       <h2>Storage in your browser</h2>
       <p>
-        Some tools remember things between pages using your browser's
-        <code>sessionStorage</code>. This stays on your device, is readable only
-        by bardbits.ca, is never transmitted to any server, and is erased by your
-        browser when you close the tab.
+        Some projects remember things using your browser's own storage. Whatever
+        is stored <strong>stays on your device</strong>, is readable only by
+        bardbits.ca, and is never transmitted to any server — there is no server
+        to transmit it to, because the site is static files and the pages are
+        blocked from contacting any other domain.
+      </p>
+      <p>
+        How long it lasts differs by project, so each one says below. Clearing
+        site data in your browser removes all of it immediately, whichever kind
+        it is.
       </p>
 
       <h3>Name generators</h3>
       <p>
         The cottage, cabin, and beach house name generators keep the list of
-        names you have already drawn, so it survives moving between them. It is
-        stored under keys beginning <code>retreat-names:history:</code>, holds
-        only generated names, and is discarded when the tab closes. Clearing site
-        data in your browser removes it immediately.
+        names you have already drawn, so it survives moving between them. It uses
+        <code>sessionStorage</code> under keys beginning
+        <code>retreat-names:history:</code>, holds only generated names, and is
+        <strong>erased when you close the tab</strong>.
+      </p>
+
+      <h3>Reversi</h3>
+      <p>
+        The Reversi game uses <code>localStorage</code>, which unlike the above
+        <strong>persists after you close the tab</strong> and stays until you
+        remove it. That is deliberate: a saved game that vanished when you closed
+        the tab would not be worth offering. It keeps three things, all under
+        keys beginning <code>reversi:</code>:
+      </p>
+      <ul>
+        <li>
+          <strong>The game in progress</strong> — the position on the board,
+          whose turn it is, the moves so far, and which colour you are playing,
+          so a refresh or a stray back button does not destroy a long game.
+        </li>
+        <li>
+          <strong>Your settings</strong> — difficulty, preferred colour, and
+          whether legal moves and animations are shown.
+        </li>
+        <li>
+          <strong>Your record</strong> — how many games you have won, lost and
+          drawn at each difficulty.
+        </li>
+      </ul>
+      <p>
+        None of it identifies you, and none of it leaves your device. The game
+        page has a control that removes all three at once — the saved game, your
+        settings and your record — so you do not have to go through your
+        browser's settings to remove them.
       </p>
 
       <h2>Server logs</h2>
@@ -180,8 +216,11 @@
         within 30 days.
       </p>
       <p>
-        Browser storage is entirely under your control: clearing site data, or
-        simply closing the tab, removes it. Depending on where you live you may
+        Browser storage is entirely under your control. Clearing site data in
+        your browser removes all of it. Closing the tab removes some of it — see
+        the section above, which says per project which kind is used, and note
+        that Reversi's saved game and record survive until you clear them or use
+        the control on the game page. Depending on where you live you may
         have rights under laws such as PIPEDA in Canada, the GDPR in the UK and
         EU, or the CCPA in California. If you would like to exercise one, or want
         to know what is held, get in touch using the address below.
