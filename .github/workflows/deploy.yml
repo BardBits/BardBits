@@ -59,9 +59,17 @@ jobs:
       - name: Confirm the assumed identity
         run: aws sts get-caller-identity
 
+      # These steps are hand-maintained and projects.json does not drive them.
+      # A project added to the manifest gets built, previewed, indexed and
+      # smoke-tested without ever being uploaded, which is how /reversi/ shipped
+      # 403ing behind a live landing-page card. Adding a project means adding a
+      # step here. See the guard in ci.yml that now checks the two agree.
+      #
       # Order matters. retreat-names prunes its prefix, so it goes first; the
       # hub restores the index.html that lives alongside it; site-root goes last
-      # so the sitemap index reflects what the other two just built.
+      # so the sitemap index reflects what the others just built. Projects that
+      # own their prefix outright, like reversi, have no such constraint and
+      # slot in anywhere before site-root.
       - name: Deploy retreat-names
         shell: pwsh
         run: ./scripts/deploy-project.ps1 -Project retreat-names -Bucket $env:BUCKET -DistributionId $env:DISTRIBUTION_ID -SkipBuild
@@ -69,6 +77,10 @@ jobs:
       - name: Deploy name-generators-hub
         shell: pwsh
         run: ./scripts/deploy-project.ps1 -Project name-generators-hub -Bucket $env:BUCKET -DistributionId $env:DISTRIBUTION_ID -SkipBuild
+
+      - name: Deploy reversi
+        shell: pwsh
+        run: ./scripts/deploy-project.ps1 -Project reversi -Bucket $env:BUCKET -DistributionId $env:DISTRIBUTION_ID -SkipBuild
 
       - name: Deploy site-root
         shell: pwsh
