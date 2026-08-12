@@ -386,7 +386,10 @@ function wire() {
     clearAll();
     game.resetStoredData();
     syncControls();
-    say("Saved game and record cleared.");
+    // Names all three, matching the button and /privacy. This is the only
+    // confirmation a screen reader user gets, so it should not be the narrowest
+    // description of what just happened.
+    say("Saved game, settings and record cleared.");
   });
 }
 
