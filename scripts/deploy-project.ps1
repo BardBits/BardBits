@@ -101,11 +101,55 @@ try {
   # the superseded ones can go. Running this last means an interrupted deploy
   # leaves orphaned assets - wasted bytes - rather than a broken page.
   if ($prune) {
+    # More than one project can mount at the same prefix - the generators hub
+    # and retreat-names both sit at name-generators/. A --delete against the
+    # whole prefix takes out whatever the other project owns: only *.html,
+    # *.xml and robots.txt are excluded from that pass, so every fingerprinted
+    # asset, favicon and og image belonging to a co-tenant is in range. The
+    # page keeps serving and its stylesheet starts 403ing, which is the failure
+    # this script's three-phase order exists to avoid in the first place.
+    #
+    # So a project sharing its prefix must name the subpaths it may delete.
+    # Refusing here rather than in review means the next generator cannot ship
+    # this by forgetting to think about it.
+    $sharers = @($manifest.projects | Where-Object { $_.name -ne $Project -and $_.prefix -eq $prefix })
+    $scope = @($cfg.pruneScope | Where-Object { $_ })
+    if ($sharers.Count -gt 0 -and $scope.Count -eq 0) {
+      throw ("Project '$Project' prunes '$prefix', which it shares with: " +
+             ($sharers.name -join ", ") + ". Declare pruneScope in projects.json " +
+             "listing only the subpaths '$Project' owns, or set prune to false.")
+    }
+
     Write-Host "==> Pruning superseded assets..." -ForegroundColor Cyan
-    aws s3 sync $cfg.source $dest --delete `
-      "--exclude=*.html" "--exclude=*.xml" "--exclude=robots.txt" `
-      --cache-control "public,max-age=31536000,immutable"
-    if ($LASTEXITCODE -ne 0) { throw "Asset prune failed." }
+
+    # A scoped prune runs one sync per owned subpath, against that subpath as
+    # its own destination. Deliberately NOT one sync with --include filters:
+    # that would make correctness depend on AWS filter precedence, where the
+    # last match wins and an --include placed after --exclude=*.html silently
+    # re-includes pages and re-uploads them with the year-long immutable cache
+    # this pass applies. Here the destination bounds the blast radius, so a
+    # --delete cannot reach outside the subtree whatever the filters say.
+    $targets = if ($scope.Count -gt 0) {
+      $scope | ForEach-Object { @{ From = (Join-Path $cfg.source $_); To = "$dest/$_" } }
+    } else {
+      @(@{ From = $cfg.source; To = $dest })
+    }
+    if ($scope.Count -gt 0) {
+      Write-Host "    limited to: $($scope -join ', ')" -ForegroundColor DarkGray
+    }
+
+    foreach ($t in $targets) {
+      # A declared subpath that the build did not produce means the manifest and
+      # the build disagree. Syncing an empty directory with --delete would empty
+      # the live one, so stop instead.
+      if (-not (Test-Path $t.From)) {
+        throw "pruneScope names '$($t.From)', which does not exist after the build."
+      }
+      aws s3 sync $t.From $t.To --delete `
+        "--exclude=*.html" "--exclude=*.xml" "--exclude=robots.txt" `
+        --cache-control "public,max-age=31536000,immutable"
+      if ($LASTEXITCODE -ne 0) { throw "Asset prune failed for '$($t.To)'." }
+    }
   }
 
   # A sitemap may live at any path, so each ships with the project it describes;
