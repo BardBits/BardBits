@@ -48,6 +48,16 @@
       "sitemap": true
     },
     {
+      "name": "boat-names",
+      "source": "projects/boat-names/dist",
+      "prefix": "name-generators/boat",
+      "workspace": "projects/boat-names",
+      "prune": true,
+      "protectRootIndex": false,
+      "pages": [],
+      "sitemap": true
+    },
+    {
       "name": "reversi",
       "source": "projects/reversi/dist",
       "prefix": "reversi",

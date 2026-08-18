@@ -1,0 +1,30 @@
+{
+  "id": "nautical",
+  "title": "Nautical Boat Name Generator",
+  "tagline": "Timeless names drawn from wind, tide and star.",
+  "description": "Generate a nautical boat name with real poetry in it and preview it on a carved quarterboard. Wind, tide, celestial and seafaring names for a vessel that deserves something sincere.",
+  "rejectLabel": "Not quite seaworthy.",
+  "retryLabel": "Try another",
+  "seo": {
+    "slug": "nautical",
+    "tab": "Nautical",
+    "title": "Nautical Boat Name Generator - Classic Sea Names",
+    "description": "Generate a timeless nautical boat name and preview it on a carved quarterboard. Wind, tide and star names for a boat with a little poetry."
+  },
+  "patterns": [
+    { "template": ["{adjective}", "{element}"], "weight": 6 },
+    { "template": ["{standalone}"], "weight": 3 },
+    { "template": ["{celestial}"], "weight": 2 },
+    { "template": ["{adjective}", "{sealife}"], "weight": 2 },
+    { "template": ["The", "{adjective}", "{element}"], "weight": 1 },
+    { "template": ["{adjective}", "{celestial}"], "weight": 1 }
+  ],
+  "wordLists": {
+    "adjective": ["Silver","Restless","Wandering","Morning","Evening","Northern","Southern","Free","Wild","Gentle","Distant","Endless","Bold","Fair","Salt","Blue","Grey","Golden","Lucky","Bright","Swift","Steady","Quiet","Brave","Misty","Rolling","Rising","Second","Eternal","Fleeting","Drifting","Whispering","Lone","Open","Deep","Far","Pale","Dawn"],
+    "element": ["Wind","Tide","Wave","Spray","Sea","Current","Horizon","Breeze","Squall","Gale","Swell","Foam","Mist","Star","Dawn","Dusk","Sky","Storm","Cloud","Moon","Sun","Light","Water","Shore","Wake","Drift","Voyage","Passage","Crossing","Reach","Sound","Bay","Channel","Anchor","Compass","Sail","Song","Spirit"],
+    "celestial": ["Polaris","Orion","Aurora","Lodestar","Zephyr","Halcyon","Nautilus","Calypso","Triton","Poseidon","Nereid","Siren","Odyssey","Meridian","Solstice","Equinox","Andromeda","Vega","Altair","Sirius","Antares","Perseus"],
+    "sealife": ["Osprey","Petrel","Tern","Gull","Kestrel","Heron","Dolphin","Marlin","Manta","Orca","Albatross","Kingfisher","Fulmar","Gannet","Shearwater","Cormorant","Skua","Sandpiper"],
+    "standalone": ["Windsong","Spindrift","Tradewind","Seafarer","Wayfarer","Wanderer","Seabird","Windward","Seaward","Moonshadow","Stardust","Seaglass","Driftwood","Saltaire","Mistral","Sirocco","Halyard","Serenity","Escapade","Reverie"]
+  },
+  "sign": { "style": "quarterboard" }
+}
