@@ -9,6 +9,7 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present && node scripts/build-sitemap-index.mjs",
     "dev": "npm run dev --workspace projects/retreat-names",
-    "site": "node scripts/serve-site.mjs"
+    "site": "node scripts/serve-site.mjs",
+    "og:root": "node scripts/make-root-og-image.mjs"
   }
 }
