@@ -53,6 +53,28 @@ try {
     Write-Host "==> Ignoring prune for $Project - it is mounted at the bucket root." -ForegroundColor Yellow
   }
 
+  # More than one project can mount at the same prefix - the generators hub and
+  # retreat-names both sit at name-generators/, and boat-names sits beneath it.
+  # A --delete against the whole prefix reaches whatever a co-tenant owns: the
+  # asset pass excludes only *.html, *.xml and robots.txt, and the page pass
+  # matches *.html at every depth, so both a co-tenant's fingerprinted assets
+  # and its nested pages are in range. So a project sharing its prefix must name
+  # the subpaths it may delete.
+  #
+  # Resolved here, before anything is uploaded: a misconfigured project should
+  # fail having changed nothing, not half way through.
+  $sharers = @($manifest.projects | Where-Object { $_.name -ne $Project -and $_.prefix -eq $prefix })
+  $scope = @($cfg.pruneScope | Where-Object { $_ })
+  if ($prune -and $sharers.Count -gt 0 -and $scope.Count -eq 0) {
+    throw ("Project '$Project' prunes '$prefix', which it shares with: " +
+           ($sharers.name -join ", ") + ". Declare pruneScope in projects.json " +
+           "listing only the subpaths '$Project' owns, or set prune to false.")
+  }
+  foreach ($path in $scope) {
+    $full = Join-Path $cfg.source $path
+    if (-not (Test-Path $full)) { throw "pruneScope names '$full', which does not exist after the build." }
+  }
+
   if ($cfg.workspace -and -not $SkipBuild) {
     Write-Host "==> Building $Project..." -ForegroundColor Cyan
     npm run build --workspace $cfg.workspace
@@ -89,37 +111,38 @@ try {
   # prefix root, missing the nested cottage/, cabin/ and beach/ pages and
   # caching them for a year. That same narrowness is what makes it usable as the
   # protectRootIndex exclusion below.
+  # A scoped project's deletions are deferred to per-subpath passes below.
+  # "--include=*.html" matches at every depth, so a --delete here would remove a
+  # co-tenant's nested pages: protectRootIndex guards only <prefix>/index.html,
+  # which is exactly why /name-generators/boat/funny/index.html would not be
+  # covered. Verified with a probe object and a dry run, not assumed.
   Write-Host "==> Uploading pages..." -ForegroundColor Cyan
-  $htmlArgs = @("s3", "sync", $cfg.source, $dest, "--exclude=*", "--include=*.html")
-  if ($cfg.protectRootIndex) { $htmlArgs += "--exclude=index.html" }
-  if ($prune) { $htmlArgs += "--delete" }
-  $htmlArgs += @("--cache-control", "no-cache", "--content-type", "text/html; charset=utf-8")
+  $htmlFilter = @("--exclude=*", "--include=*.html")
+  if ($cfg.protectRootIndex) { $htmlFilter += "--exclude=index.html" }
+  $htmlMeta = @("--cache-control", "no-cache", "--content-type", "text/html; charset=utf-8")
+
+  $htmlArgs = @("s3", "sync", $cfg.source, $dest) + $htmlFilter
+  if ($prune -and $scope.Count -eq 0) { $htmlArgs += "--delete" }
+  $htmlArgs += $htmlMeta
   aws @htmlArgs
   if ($LASTEXITCODE -ne 0) { throw "Page upload failed." }
+
+  # Superseded pages, removed one owned subpath at a time. The destination bounds
+  # each --delete, so it cannot reach a sibling project whatever the filters do.
+  if ($prune -and $scope.Count -gt 0) {
+    Write-Host "    removing superseded pages under: $($scope -join ', ')" -ForegroundColor DarkGray
+    foreach ($path in $scope) {
+      $pageArgs = @("s3", "sync", (Join-Path $cfg.source $path), "$dest/$path", "--delete") +
+                  @("--exclude=*", "--include=*.html") + $htmlMeta
+      aws @pageArgs
+      if ($LASTEXITCODE -ne 0) { throw "Page prune failed for '$dest/$path'." }
+    }
+  }
 
   # Now that the new HTML is live and points only at assets already uploaded,
   # the superseded ones can go. Running this last means an interrupted deploy
   # leaves orphaned assets - wasted bytes - rather than a broken page.
   if ($prune) {
-    # More than one project can mount at the same prefix - the generators hub
-    # and retreat-names both sit at name-generators/. A --delete against the
-    # whole prefix takes out whatever the other project owns: only *.html,
-    # *.xml and robots.txt are excluded from that pass, so every fingerprinted
-    # asset, favicon and og image belonging to a co-tenant is in range. The
-    # page keeps serving and its stylesheet starts 403ing, which is the failure
-    # this script's three-phase order exists to avoid in the first place.
-    #
-    # So a project sharing its prefix must name the subpaths it may delete.
-    # Refusing here rather than in review means the next generator cannot ship
-    # this by forgetting to think about it.
-    $sharers = @($manifest.projects | Where-Object { $_.name -ne $Project -and $_.prefix -eq $prefix })
-    $scope = @($cfg.pruneScope | Where-Object { $_ })
-    if ($sharers.Count -gt 0 -and $scope.Count -eq 0) {
-      throw ("Project '$Project' prunes '$prefix', which it shares with: " +
-             ($sharers.name -join ", ") + ". Declare pruneScope in projects.json " +
-             "listing only the subpaths '$Project' owns, or set prune to false.")
-    }
-
     Write-Host "==> Pruning superseded assets..." -ForegroundColor Cyan
 
     # A scoped prune runs one sync per owned subpath, against that subpath as
