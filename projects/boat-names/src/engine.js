@@ -67,12 +67,14 @@ function generateOnce(config, rand) {
 
 const MAX_SAFETY_RETRIES = 20;
 
+const SAFE_FALLBACK = { name: "Seas the Day", patternUsed: "fallback" };
+
 export function generateName(config, rand = Math.random) {
   for (let i = 0; i < MAX_SAFETY_RETRIES; i++) {
     const result = generateOnce(config, rand);
     if (!isBlocked(result.name)) return result;
   }
-  return generateOnce(config, rand);
+  return SAFE_FALLBACK;
 }
 
 export function featuredName(config) {
