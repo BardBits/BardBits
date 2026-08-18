@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7a4a2a"/>
+      <stop offset="100%" stop-color="#5a3420"/>
+    </linearGradient>
+  </defs>
+  <!-- Quarterboard shape -->
+  <rect x="3" y="10" width="26" height="12" rx="2" fill="url(#wood)"/>
+  <!-- Gold pinstripe -->
+  <rect x="5" y="12" width="22" height="8" rx="1" fill="none" stroke="#c8a23c" stroke-width="0.8"/>
+  <!-- Scroll ends -->
+  <path d="M3 13 Q0 12 1 15 Q2 17 3 16 Z" fill="url(#wood)"/>
+  <path d="M29 13 Q32 12 31 15 Q30 17 29 16 Z" fill="url(#wood)"/>
+  <!-- Gold anchor glyph -->
+  <circle cx="16" cy="17" r="1.5" fill="none" stroke="#c8a23c" stroke-width="1"/>
+  <line x1="16" y1="15.5" x2="16" y2="12.5" stroke="#c8a23c" stroke-width="1" stroke-linecap="round"/>
+  <line x1="13.5" y1="14" x2="18.5" y2="14" stroke="#c8a23c" stroke-width="0.8" stroke-linecap="round"/>
+  <path d="M12.5 19 Q14 17 16 18.5 Q18 17 19.5 19" fill="none" stroke="#c8a23c" stroke-width="0.8" stroke-linecap="round"/>
+</svg>

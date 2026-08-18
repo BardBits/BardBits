@@ -1,0 +1,29 @@
+{
+  "id": "sailboat",
+  "title": "Sailboat Name Generator",
+  "tagline": "Elegant names for a vessel under sail.",
+  "description": "Generate an elegant sailboat name and see it on a carved quarterboard. Wind, sail and horizon names in a literary, seafaring register for the boat that earns its way across the water.",
+  "rejectLabel": "Doesn't fill the sails.",
+  "retryLabel": "Try another",
+  "seo": {
+    "slug": "sailboat",
+    "tab": "Sailboat",
+    "title": "Sailboat Name Generator - Elegant Names for Your Sailboat",
+    "description": "Generate an elegant sailboat name and see it on a carved quarterboard. Wind, sail and horizon names in a literary, seafaring register."
+  },
+  "patterns": [
+    { "template": ["{adjective}", "{element}"], "weight": 5 },
+    { "template": ["{sailterm}"], "weight": 4 },
+    { "template": ["{standalone}"], "weight": 3 },
+    { "template": ["{celestial}"], "weight": 3 },
+    { "template": ["{adjective}", "{celestial}"], "weight": 1 }
+  ],
+  "wordLists": {
+    "adjective": ["Silver","Restless","Wandering","Morning","Evening","Northern","Free","Wild","Gentle","Distant","Endless","Bold","Fair","Salt","Blue","Grey","Golden","Swift","Steady","Brave","Misty","Rolling","Rising","Eternal","Fleeting","Drifting","Whispering","Lone","Open","Deep","Far","Pale","Dawn"],
+    "element": ["Wind","Tide","Wave","Spray","Sea","Current","Horizon","Breeze","Squall","Gale","Swell","Foam","Mist","Star","Dawn","Dusk","Sky","Storm","Moon","Sun","Light","Water","Wake","Drift","Voyage","Passage","Crossing","Reach","Sail","Song","Spirit"],
+    "celestial": ["Polaris","Orion","Aurora","Lodestar","Zephyr","Halcyon","Nautilus","Calypso","Triton","Nereid","Siren","Odyssey","Meridian","Solstice","Equinox","Andromeda","Vega","Altair","Sirius","Antares","Perseus"],
+    "sailterm": ["Windward","Leeward","Spinnaker","Mainsail","Genoa","Halyard","Regatta","Clipper","Schooner","Sloop","Ketch","Cutter","Yawl","Tack","Luff","Trade Winds","Close Reach","Broad Reach","Following Sea","Fair Winds"],
+    "standalone": ["Windsong","Spindrift","Tradewind","Seafarer","Wayfarer","Wanderer","Seabird","Windward","Seaward","Moonshadow","Stardust","Seaglass","Driftwood","Saltaire","Mistral","Sirocco","Halyard","Serenity","Escapade","Reverie"]
+  },
+  "sign": { "style": "quarterboard" }
+}
