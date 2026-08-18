@@ -61,6 +61,12 @@ is bounded by the destination rather than by `--include` ordering. Files sitting
 at the prefix root itself are never pruned under a scope; they have stable names,
 so nothing accumulates.
 
+**The scope governs pages as well as assets.** `--include=*.html` matches at
+every depth, so an unscoped page pass deletes a co-tenant's *nested* pages too —
+`protectRootIndex` guards only `<prefix>/index.html`, which is precisely why
+`/name-generators/boat/funny/index.html` would not be covered by it. For a scoped
+project the page upload is additive and its deletions run per owned subpath.
+
 ## One-time setup
 
 ### 1. Sign in
