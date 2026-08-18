@@ -185,6 +185,14 @@ These will not show up in a `git status`, and are easy to break by accident:
   project link to the favicon: the root, `/about/`, `/privacy/` and the hub. Its
   blast radius is wider than the generators, though not the whole site: Reversi
   ships its own `/reversi/favicon.svg` and does not depend on it.
+- **Adding a workspace can change another project's dependencies.** Adding
+  `projects/reversi` made npm hoist `vite` to the root and re-resolve it from
+  8.2.0 to 8.2.1, so `retreat-names`' build tool moved version as a side effect
+  of a merge whose diff never mentioned `retreat-names`. Verified benign that
+  time — the rebuilt output was byte-identical — but a lockfile diff that only
+  adds and removes entries, with no version changed in place, can still move a
+  shared dependency. Read the add/remove pair, not just the "changed" list, and
+  build every project that shares the hoisted package.
 - **Memory does not follow a directory rename or a new worktree.** It is keyed
   by path. Moving or adding a working directory means copying the memory
   directory across, or the next session starts blind.

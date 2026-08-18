@@ -31,6 +31,7 @@ drift between being deployed, previewed and indexed.
 | `prefix` | S3 key prefix; `""` is the bucket root |
 | `workspace` | npm workspace to build, or `null` for a project with no build |
 | `prune` | may this project's sync delete keys under its prefix? |
+| `pruneScope` | subpaths it may delete, **required when the prefix is shared** |
 | `protectRootIndex` | keep `<prefix>/index.html` while pruning, because another project owns it |
 | `pages` | static URLs this project contributes to the sitemap |
 | `sitemap` | true if the build emits its own `sitemap.xml` |
@@ -49,6 +50,16 @@ The exclusion works because `--exclude "index.html"` matches only the prefix
 root — `cottage/index.html` is untouched, so stale nested pages are still pruned.
 `deploy-project.ps1` also refuses to prune anything mounted at the bucket root
 regardless of what the manifest says.
+
+**A project sharing its prefix must declare `pruneScope`,** and the script
+refuses to run without it. Only `*.html`, `*.xml` and `robots.txt` are excluded
+from the prune pass, so a `--delete` against a shared prefix root removes every
+fingerprinted asset, favicon and og image belonging to a co-tenant — the page
+keeps serving and its stylesheet starts 403ing. A scoped prune runs one sync per
+named subpath against that subpath as its own destination, so the blast radius
+is bounded by the destination rather than by `--include` ordering. Files sitting
+at the prefix root itself are never pruned under a scope; they have stable names,
+so nothing accumulates.
 
 ## One-time setup
 
