@@ -10,6 +10,7 @@
     "prefix           S3 key prefix; \"\" is the bucket root",
     "workspace        npm workspace to build, or null for a project with no build step",
     "prune            may this project's sync delete keys under its prefix?",
+    "pruneScope       subpaths it may delete; REQUIRED when the prefix is shared",
     "protectRootIndex keep <prefix>/index.html while pruning, because another project owns it",
     "pages            static URLs this project contributes to the sitemap",
     "sitemap          true if the build emits its own sitemap.xml to list in the index"
@@ -41,7 +42,18 @@
       "prefix": "name-generators",
       "workspace": "projects/retreat-names",
       "prune": true,
+      "pruneScope": ["cottage", "cabin", "beach", "assets"],
       "protectRootIndex": true,
+      "pages": [],
+      "sitemap": true
+    },
+    {
+      "name": "boat-names",
+      "source": "projects/boat-names/dist",
+      "prefix": "name-generators/boat",
+      "workspace": "projects/boat-names",
+      "prune": true,
+      "protectRootIndex": false,
       "pages": [],
       "sitemap": true
     },

@@ -1,0 +1,51 @@
+{
+  "id": "funny",
+  "title": "Funny Boat Name Generator",
+  "tagline": "Clever names that earn the double take.",
+  "description": "Generate a funny boat name and see it on a carved quarterboard. Nautical puns and dry wordplay for the boat that makes the marina smile.",
+  "rejectLabel": "Didn't land.",
+  "retryLabel": "Try another",
+  "seo": {
+    "slug": "funny",
+    "tab": "Funny",
+    "title": "Funny Boat Name Generator - Clever, Punny Boat Names",
+    "description": "Generate a funny boat name and see it on a carved quarterboard. Clever nautical puns and dry wordplay, from Knot on Call to Seas the Day."
+  },
+  "patterns": [
+    { "template": ["{standalone}"], "weight": 6 },
+    { "template": ["{homophone}", "{suffix}"], "weight": 4 },
+    { "template": ["{cheeky}"], "weight": 2 }
+  ],
+  "wordLists": {
+    "standalone": [
+      "Knot on Call","Knot Working","Knot Guilty","Knot a Yacht",
+      "Seas the Day","Reel Therapy","Reel Deal","Reel Time","For Reel",
+      "Vitamin Sea","Sea La Vie","Sea Ya",
+      "Pier Pressure","Aqua Holic","Current Sea",
+      "Fluke of Luck","Wave Length","Fish and Ships","Fish Tales",
+      "Off the Hook","The Codfather","Buoy Oh Buoy",
+      "Anchor Management","Docktor's Orders","Dockumentary","The Salty Dog",
+      "Serial Chiller","Playing Koi","Water You Doing","Oar Else","Row Row Row"
+    ],
+    "homophone": ["Knot","Sea","Reel","Aye","Buoy","Sail","Oar","Pier","Wave","Dock","Current"],
+    "suffix": {
+      "_type": "pairMap",
+      "Knot": ["Now","a Chance","So Fast","for Long","Included"],
+      "Sea": ["the Day","La Vie","Note","Worthy","Legs"],
+      "Reel": ["Therapy","Deal","Time","Talk","Quiet"],
+      "Aye": ["Aye Captain","Captain","Caramba"],
+      "Buoy": ["Meets World","Racer","Wonder"],
+      "Sail": ["of the Century","Away","Pending"],
+      "Oar": ["Nothing","Some","D'oeuvres"],
+      "Pier": ["Review","Group","Pressure"],
+      "Wave": ["Goodbye","Runner","Maker"],
+      "Dock": ["of the Bay","Holiday","Star"],
+      "Current": ["Events","Mood","Situation"]
+    },
+    "cheeky": [
+      "Nauti Buoy","Nauti by Nature","Ship Happens","Ship Faced",
+      "Miss Behavin","Berth Control","Reel Naughty"
+    ]
+  },
+  "sign": { "style": "quarterboard" }
+}

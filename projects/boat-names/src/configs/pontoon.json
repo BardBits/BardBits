@@ -1,0 +1,27 @@
+{
+  "id": "pontoon",
+  "title": "Pontoon Boat Name Generator",
+  "tagline": "Easy-going names for the lake.",
+  "description": "Generate a fun pontoon boat name and preview it on a carved sign. Lake-friendly, family-friendly, party-ready names for the boat that never goes far from shore.",
+  "rejectLabel": "Not quite the vibe.",
+  "retryLabel": "Try another",
+  "seo": {
+    "slug": "pontoon",
+    "tab": "Pontoon",
+    "title": "Pontoon Boat Name Generator - Fun Lake Names",
+    "description": "Generate a fun pontoon boat name and preview it on a carved sign. Easy-going, family-friendly lake and party names for the pontoon."
+  },
+  "patterns": [
+    { "template": ["{adjective}", "{noun}"], "weight": 5 },
+    { "template": ["{standalone}"], "weight": 4 },
+    { "template": ["Lake", "{noun}"], "weight": 3 },
+    { "template": ["Life's a", "{softnoun}"], "weight": 1 }
+  ],
+  "wordLists": {
+    "adjective": ["Lazy","Sunny","Happy","Easy","Breezy","Salty","Sandy","Lucky","Merry","Mellow","Golden","Shady","Lively","Carefree","Wavy","Sleepy","Jolly","Balmy","Dreamy","Cozy","Toasty","Idle"],
+    "noun": ["Days","Daze","Time","Life","Vibes","Hours","Waters","Sunset","Shores","Ripple","Wake","Lagoon","Cove","Getaway","Escape","Float","Drift","Paradise","Haven","Breeze"],
+    "softnoun": ["Breeze","Beach","Wave","Ripple","Dream","Daydream"],
+    "standalone": ["Toon Town","Party 'Toon","Pontooniverse","Lily Pad","Dock Holiday","Sun Deck","Float On","Good Times","Sunday Funday","The Floatel","Lake Effect","Lake Show","Aqua Holic","Seas the Day","Knot Working","Vitamin Sea","Sun Daze","Wake Me Up","Chill Pill","Reel Relaxin'"]
+  },
+  "sign": { "style": "quarterboard" }
+}

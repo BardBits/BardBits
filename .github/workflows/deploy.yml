@@ -78,6 +78,13 @@ jobs:
         shell: pwsh
         run: ./scripts/deploy-project.ps1 -Project name-generators-hub -Bucket $env:BUCKET -DistributionId $env:DISTRIBUTION_ID -SkipBuild
 
+      # boat-names mounts a level deeper, at name-generators/boat, so it shares
+      # no prefix with either of the two above and needs no pruneScope: its
+      # --delete is already bounded to its own subtree.
+      - name: Deploy boat-names
+        shell: pwsh
+        run: ./scripts/deploy-project.ps1 -Project boat-names -Bucket $env:BUCKET -DistributionId $env:DISTRIBUTION_ID -SkipBuild
+
       - name: Deploy reversi
         shell: pwsh
         run: ./scripts/deploy-project.ps1 -Project reversi -Bucket $env:BUCKET -DistributionId $env:DISTRIBUTION_ID -SkipBuild
@@ -96,7 +103,7 @@ jobs:
       - name: Smoke test the live site
         run: |
           set -e
-          for path in / /about/ /privacy/ /name-generators/ /name-generators/cottage/ /name-generators/cabin/ /name-generators/beach/ /reversi/ /name-generators/favicon.svg /sitemap.xml /robots.txt; do
+          for path in / /about/ /privacy/ /name-generators/ /name-generators/cottage/ /name-generators/cabin/ /name-generators/beach/ /name-generators/boat/ /name-generators/boat/funny/ /name-generators/boat/nautical/ /name-generators/boat/sailboat/ /name-generators/boat/pontoon/ /name-generators/boat/fishing/ /name-generators/boat/favicon.svg /reversi/ /name-generators/favicon.svg /sitemap.xml /robots.txt; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --retry 3 --retry-delay 5 "https://bardbits.ca${path}")
             echo "${code}  ${path}"
             [ "$code" = "200" ] || exit 1

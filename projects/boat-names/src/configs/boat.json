@@ -1,0 +1,35 @@
+{
+  "id": "boat",
+  "title": "Boat Name Generator",
+  "tagline": "Find the perfect name for your vessel.",
+  "description": "Generate boat names across every style and see them on a carved quarterboard. Funny puns, timeless nautical names, sailboat classics, pontoon party names and fishing favourites, all in one place.",
+  "rejectLabel": "Not the right name for the hull.",
+  "retryLabel": "Try another",
+  "seo": {
+    "slug": "boat",
+    "tab": null,
+    "title": "Boat Name Generator - Names for Your Boat on a Sign",
+    "description": "Generate the perfect boat name and preview it on a carved quarterboard. Hundreds of ideas across funny, nautical, sailboat, pontoon and fishing styles."
+  },
+  "patterns": [
+    { "template": ["{adjective}", "{element}"], "weight": 5 },
+    { "template": ["{standalone}"], "weight": 4 },
+    { "template": ["{celestial}"], "weight": 2 },
+    { "template": ["{adjective}", "{sealife}"], "weight": 2 },
+    { "template": ["{funnyStandalone}"], "weight": 3 },
+    { "template": ["{lakeAdj}", "{lakeNoun}"], "weight": 2 },
+    { "template": ["Reel", "{reelword}"], "weight": 1 }
+  ],
+  "wordLists": {
+    "adjective": ["Silver","Restless","Wandering","Morning","Evening","Northern","Free","Wild","Gentle","Distant","Bold","Fair","Salt","Blue","Golden","Lucky","Bright","Swift","Steady","Brave","Misty","Rolling","Rising","Drifting","Lone","Deep","Dawn"],
+    "element": ["Wind","Tide","Wave","Spray","Sea","Horizon","Breeze","Swell","Mist","Star","Dawn","Dusk","Storm","Moon","Light","Wake","Drift","Voyage","Passage","Anchor","Compass","Sail","Spirit"],
+    "celestial": ["Polaris","Orion","Aurora","Zephyr","Halcyon","Nautilus","Calypso","Triton","Odyssey","Meridian","Solstice","Andromeda","Vega","Sirius"],
+    "sealife": ["Osprey","Petrel","Tern","Dolphin","Marlin","Orca","Albatross","Kingfisher","Gannet","Sandpiper"],
+    "standalone": ["Windsong","Spindrift","Tradewind","Seafarer","Wayfarer","Wanderer","Seabird","Moonshadow","Stardust","Seaglass","Driftwood","Saltaire","Mistral","Serenity","Reverie"],
+    "funnyStandalone": ["Knot on Call","Seas the Day","Reel Therapy","Vitamin Sea","Pier Pressure","Aqua Holic","Fish and Ships","The Codfather","Anchor Management","Serial Chiller","Water You Doing"],
+    "lakeAdj": ["Lazy","Sunny","Happy","Mellow","Golden","Carefree","Jolly","Dreamy"],
+    "lakeNoun": ["Days","Daze","Vibes","Sunset","Drift","Paradise","Haven","Breeze"],
+    "reelword": ["Therapy","Deal","Time","Escape","Quiet"]
+  },
+  "sign": { "style": "quarterboard" }
+}

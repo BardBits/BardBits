@@ -1,0 +1,28 @@
+{
+  "id": "fishing",
+  "title": "Fishing Boat Name Generator",
+  "tagline": "Names for the boat you fish from.",
+  "description": "Generate a fishing boat name and see it on a carved quarterboard. Reel puns, species names and offshore classics for anglers who name their boat before they name their catch.",
+  "rejectLabel": "Throw that one back.",
+  "retryLabel": "Try another",
+  "seo": {
+    "slug": "fishing",
+    "tab": "Fishing",
+    "title": "Fishing Boat Name Generator - Names for Anglers",
+    "description": "Generate a fishing boat name and see it on a carved quarterboard. Reel puns, species and offshore names for the boat you fish from."
+  },
+  "patterns": [
+    { "template": ["Reel", "{reelword}"], "weight": 4 },
+    { "template": ["{standalone}"], "weight": 4 },
+    { "template": ["{adjective}", "{species}"], "weight": 3 },
+    { "template": ["{species}", "{chaser}"], "weight": 2 }
+  ],
+  "wordLists": {
+    "reelword": ["Therapy","Deal","Time","Talk","Busy","Escape","Quiet","Happy","Trouble"],
+    "adjective": ["Lucky","Wild","Salty","Reel","Hooked","Bold","Silent","Early","Deep","Restless"],
+    "species": ["Bass","Walleye","Marlin","Tarpon","Muskie","Pike","Trout","Salmon","Perch","Cod","Tuna","Mahi","Wahoo","Snapper","Grouper","Halibut","Catfish","Bluegill","Redfish","Flounder","Barracuda","Sailfish","Kingfish"],
+    "chaser": ["Hunter","Chaser","Runner","Wrangler","Seeker","Bandit","Whisperer","Slayer"],
+    "standalone": ["Reel Therapy","Get Reel","Fishful Thinking","Line Dancer","Gone Fishin'","The Codfather","For Cod's Sake","Fin & Tonic","Bait Runner","Strike Zone","Tuna Turner","Kraken Up","Catch of the Day","Tight Lines","O-Fish-Ally","Fishing Impossible","Hook Line & Sinker","Reel Escape","Just Keep Castin'","Scale Model"]
+  },
+  "sign": { "style": "quarterboard" }
+}
