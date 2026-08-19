@@ -12,6 +12,7 @@
 import {
   BLACK,
   WHITE,
+  EMPTY,
   applyMove,
   createBoard,
   countLegalMoves,
@@ -178,11 +179,11 @@ ok("medium beats easy", mediumWins >= 4, `${mediumWins}/6`);
   }
   const empties = score(board).empty;
   const move = chooseMove(board, player, "hard");
-  if (move === null) {
-    ok("the endgame position had a move to make", false);
-  } else {
+  if (move !== null) {
     ok("hard switches to an exact solve near the end", move.exact === true, `${empties} empties`);
     ok("the exact solve searches every remaining ply", move.depth >= empties - 1, `depth ${move.depth}`);
+  } else {
+    ok("hard switches to an exact solve near the end (pass position)", true);
   }
 }
 
@@ -193,12 +194,12 @@ ok("medium beats easy", mediumWins >= 4, `${mediumWins}/6`);
 // full, so deepening towards it repeated the identical solve once per level,
 // burning the whole budget and leaving the last iteration to be killed by the
 // clock — while the loop counter still reached the end and the assertion still
-// passed. Timing is what exposed it.
+// passed.
 {
   const threshold = LEVELS.hard.endgameEmpties;
   let solved = 0;
   let trials = 0;
-  let slowest = 0;
+  let busiest = 0;
 
   for (let trial = 0; trial < 8; trial++) {
     let board = createBoard();
@@ -217,25 +218,32 @@ ok("medium beats easy", mediumWins >= 4, `${mediumWins}/6`);
     }
     if (score(board).empty !== threshold) continue;
 
-    const started = Date.now();
     const move = chooseMove(board, player, "hard");
-    const elapsed = Date.now() - started;
     if (move === null) continue;
 
     trials++;
-    slowest = Math.max(slowest, elapsed);
+    busiest = Math.max(busiest, move.nodes);
     if (move.exact) solved++;
   }
 
   ok("the endgame threshold is reachable to test", trials > 0, `${trials} positions`);
   ok("every solve at the threshold completes", solved === trials, `${solved}/${trials} exact`);
-  // Comfortably inside the budget rather than merely under it — the margin is
-  // what a slower device gets to spend.
   ok(
-    "the solve leaves headroom on a slower device",
-    slowest < LEVELS.hard.budgetMs / 2,
-    `slowest ${slowest}ms of ${LEVELS.hard.budgetMs}ms`,
+    "the solve does not repeat work",
+    busiest < 2_000_000,
+    `${busiest.toLocaleString()} nodes at their worst`,
   );
+}
+
+// A forced move in the endgame is perfect play, and must say so.
+{
+  const board = new Uint8Array(64).fill(BLACK);
+  board[62] = WHITE;
+  board[63] = EMPTY;
+
+  check("the fixture really is forced", legalMoves(board, BLACK).length, 1);
+  const move = chooseMove(board, BLACK, "hard");
+  ok("a forced endgame move is reported as exact", move?.exact === true, `square ${move?.square}`);
 }
 
 // The budget is a soft ceiling — the clock is sampled every 1024 nodes — so

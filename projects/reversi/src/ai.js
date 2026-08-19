@@ -96,6 +96,11 @@ export const LEVELS = {
 
 export const DEFAULT_LEVEL = "medium";
 
+// Separate allowance for the exact endgame solve — deliberately far larger
+// than the midgame budgets, because the work is finite and its whole point is
+// the guarantee. If it somehow fires, chooseMove reports exact: false.
+export const ENDGAME_BUDGET_MS = 10_000;
+
 /** Thrown to unwind the search when the time budget is spent. */
 class OutOfTime extends Error {}
 
@@ -270,9 +275,6 @@ export function chooseMove(board, player, levelId = DEFAULT_LEVEL, now = Date.no
   const level = LEVELS[levelId] ?? LEVELS[DEFAULT_LEVEL];
   const moves = legalMoves(board, player);
   if (moves.length === 0) return null;
-  if (moves.length === 1) {
-    return { ...moves[0], depth: 0, nodes: 0, exact: false, elapsedMs: 0 };
-  }
 
   const empties = countEmpties(board);
   // Once few enough squares remain, stop guessing and play the position out.
@@ -280,10 +282,14 @@ export function chooseMove(board, player, levelId = DEFAULT_LEVEL, now = Date.no
   // cannot be outplayed — only out-positioned earlier.
   const exact = empties > 0 && empties <= level.endgameEmpties;
 
+  if (moves.length === 1) {
+    return { ...moves[0], depth: 0, nodes: 0, exact, elapsedMs: 0 };
+  }
+
   const working = Uint8Array.from(board);
   const ctx = {
     nodes: 0,
-    deadline: now + level.budgetMs,
+    deadline: now + (exact ? ENDGAME_BUDGET_MS : level.budgetMs),
     // Indexed by remaining depth, so each ply keeps its own best-move hint.
     preferred: new Array(CELLS + 2).fill(-1),
   };

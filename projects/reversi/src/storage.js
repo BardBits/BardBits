@@ -39,7 +39,7 @@ export const STORAGE_KEYS = [GAME_KEY, SETTINGS_KEY, RECORD_KEY];
 export const DEFAULT_SETTINGS = {
   difficulty: "medium",
   playAs: BLACK,
-  showLegalMoves: true,
+  showLegalMoves: false,
   animations: true,
 };
 
